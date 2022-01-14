@@ -1,12 +1,5 @@
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.io.*;
+import java.net.*;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,6 +20,8 @@ public class Server {
             System.err.println("Error starting server on port " + PORT);
             System.exit(1);
         }
+
+        connectedClients = new ArrayList<NodeInfo>();
     }
 
     public void runServerLoop() throws IOException {
@@ -58,17 +53,23 @@ public class Server {
         ObjectOutputStream toClientObj;
 
         try {
+            System.out.println("FIRST");
             fromClient = new DataInputStream(clientSocket.getInputStream());
+            System.out.println("SECOND");
             fromClientObj = new ObjectInputStream(fromClient);
 
+            System.out.println("THIRD");
             toClient = new DataOutputStream(clientSocket.getOutputStream());
+            System.out.println("FOURTH");
             toClientObj = new ObjectOutputStream(toClient);
+            System.out.println("DONE");
         } catch (IOException e) {
-            System.err.println("Error opening network streams");
+            System.err.println("Error opening network streams ");
             return;
         }
 
         received = (Message) fromClientObj.readObject();
+        System.out.println(((NodeInfo )received.content).name);
 
         switch (received.type) {
             case JOIN:
@@ -92,7 +93,7 @@ public class Server {
     }
 
     public static void main(String args[]) throws Exception {
-        Server Server = new Server();
-        Server.runServerLoop();
+        Server server = new Server();
+        server.runServerLoop();
     }
 }
