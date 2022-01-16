@@ -1,98 +1,162 @@
+import java.util.Locale;
 import java.util.Scanner;
 
 import java.io.*;
 import java.net.*;
 
-class Client implements Runnable {
-    private static String ip;
-    private static int port;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-    private Socket socket;
+class Client {
+    private String serverIp;
+    private int serverPort;
+
+    private String clientIp;
+    private int clientPort;
+    private String name;
+
+    private ServerListen serverListen = null;
+    private UserListen userListen = null;
 
     Client() throws java.io.IOException {
         File properties = new File("properties.txt");
-        Scanner fileReader;
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("Please enter your name: ");
+        name = scanner.nextLine();
+        System.out.println("Hello " + name + ". Please type \"JOIN\" to enter the server");
 
         try {
-            fileReader = new Scanner(properties);
+            scanner = new Scanner(properties);
 
-            ip = fileReader.nextLine();
-            port = fileReader.nextInt();
+            serverIp = scanner.nextLine();
+            serverPort = Integer.parseInt(scanner.nextLine());
+            clientIp = scanner.nextLine();
+            clientPort = Integer.parseInt(scanner.nextLine());
 
-            fileReader.close();
+            scanner.close();
         } catch (FileNotFoundException e) {
             System.err.println("Failed to find properties file.");
             System.exit(1);
         }
 
-        System.out.println("ip: " + ip + " port: " + port);
+        serverListen = new ServerListen();
+        userListen = new UserListen();
 
-        try {
-            socket = new Socket(ip, port);
-        } catch (IOException e) {
-            System.err.println("Failed to create socket:\n" + e);
-            System.exit(1);
+        serverListen.start();
+        userListen.start();
+    }
+
+    class ServerListen extends Thread {
+        ServerSocket serverSocket;
+
+        public void run() {
+            Message message = null;
+            boolean isRunning = true;
+
+            try {
+                serverSocket = new ServerSocket(clientPort);
+            } catch (IOException e) {
+                Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, e);
+                System.err.println("Error listening on port " + clientPort);
+                System.exit(1);
+            }
+
+            while (isRunning) {
+                try {
+                    isRunning = read(serverSocket.accept());
+                } catch (IOException e) {
+                    Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, e);
+                    System.err.println("Error receiving message from client: IOException" + e);
+                }
+            }
         }
 
-        DataOutputStream toServer = new DataOutputStream(socket.getOutputStream());
-        ObjectOutputStream toServerObj = new ObjectOutputStream(toServer);
+        public boolean read(Socket serverSocket) throws IOException {
+            Message message = null;
+            DataInputStream fromServer = new DataInputStream(serverSocket.getInputStream());
+            ObjectInputStream fromServerObj = new ObjectInputStream(fromServer);
 
-        DataInputStream fromServer = new DataInputStream(socket.getInputStream());
-        ObjectInputStream fromServerObj = new ObjectInputStream(fromServer);
+            try {
+                message = (Message) fromServerObj.readObject();
+            } catch (ClassNotFoundException e) {
+                Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, e);
+                System.err.println("Error receiving message from server: ClassNotFoundException" + e);
+            }
 
-        NodeInfo info = new NodeInfo("ip", 0, "Hi");
-        Message message = new Message(info, MessageTypes.JOIN);
+            if (message.type == MessageTypes.NOTE) {
+                System.out.println((message.content));
+            } else if (message.type == MessageTypes.SHUTDOWN) {
+                return false;
+            }
 
-        toServerObj.writeObject(message);
-}
-
-    public void run() {
-        DataInputStream fromServer = null;
-        DataOutputStream toServer = null;
-        Scanner userInput = new Scanner(System.in);
-
-        int input;
-        int result;
-
-        try {
-            fromServer = new DataInputStream(socket.getInputStream());
-            toServer = new DataOutputStream(socket.getOutputStream());
-        } catch (IOException e) {
-            System.err.println("Error opening network streams:\n" + e);
-            System.exit(1);
-        }
-
-        System.out.println("Give an int > 0.");
-        System.out.println("Input: ");
-        input = userInput.nextInt();
-
-        try {
-            System.out.println("Sending int " + input + " to server.");
-            toServer.writeInt(input);
-        } catch (IOException e) {
-            System.err.println("Error writing int to server:\n" + e);
-            System.exit(1);
-        }
-
-        try {
-            result = fromServer.readInt();
-            System.out.println("It took " + result + " step" + (result == 1 ? "" : "s") + ".");
-        } catch (IOException e) {
-            System.err.println("Error receiving result from server " + e);
-            System.exit(1);
-        }
-
-        try {
-            System.out.println("Closing socket to server.");
-            socket.close();
-        } catch (IOException e) {
-            System.err.println("Error closing socket to server.");
+            return  true;
         }
     }
 
+    class UserListen extends Thread {
+        Socket socket;
+
+        public void run() {
+            Scanner scanner = null;
+            String input;
+            Message message = null;
+            boolean isRunning = true;
+
+            while (isRunning) {
+                scanner = new Scanner(System.in);
+                input = scanner.nextLine();
+                message = parse(input);
+
+                if (message.type == MessageTypes.SHUTDOWN ||
+                        message.type == MessageTypes.SHUTDOWN_ALL) {
+                    isRunning = false;
+                }
+
+                try {
+                    socket = new Socket(serverIp, serverPort);
+                    send(message, socket);
+                } catch (IOException e) {
+                    Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, e);
+                    System.err.println("Failed to send message:\n" + e);
+                    System.exit(1);
+                }
+            }
+        }
+
+        public Message parse(String input) {
+            String[] splitInput;
+
+            NodeInfo node = new NodeInfo(clientIp, clientPort, name);
+            Message message;
+
+            if (input.toUpperCase(Locale.ROOT).equals("JOIN")) {
+                message = new Message(node, MessageTypes.JOIN);
+            } else if (input.toUpperCase(Locale.ROOT).equals("LEAVE")) {
+                message = new Message(node, MessageTypes.LEAVE);
+            } else if (input.toUpperCase(Locale.ROOT).equals("SHUTDOWN")) {
+                message = new Message(node, MessageTypes.SHUTDOWN);
+            } else if (input.toUpperCase(Locale.ROOT).equals("SHUTDOWN ALL")) {
+                message = new Message(node, MessageTypes.SHUTDOWN_ALL);
+            } else {
+                message = new Message(input, MessageTypes.NOTE);
+            }
+
+            return message;
+        }
+
+        public void send(Message message, Socket socket) throws IOException {
+            DataOutputStream toServer = null;
+            ObjectOutputStream toServerObj = null;
+
+            toServer = new DataOutputStream(socket.getOutputStream());
+            toServerObj = new ObjectOutputStream(toServer);
+
+            toServerObj.writeObject(message);
+        }
+    }
 
     public static void main(String[] args) throws Exception {
         Client client = new Client();
-//        client.
     }
 }

@@ -14,7 +14,7 @@ public class Server {
 
     public Server() {
         try {
-            Server.serverSocket = new ServerSocket(PORT);
+            serverSocket = new ServerSocket(PORT);
         } catch (IOException e) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, e);
             System.err.println("Error starting server on port " + PORT);
@@ -25,13 +25,14 @@ public class Server {
     }
 
     public void runServerLoop() throws IOException {
+        boolean isRunning = true;
         System.out.println("Chat server started");
 
-        while (true) {
+        while (isRunning) {
             System.out.println("Receiving messages on port #" + PORT);
 
             try {
-                handleClient(serverSocket.accept());
+                isRunning = handleClient(serverSocket.accept());
             } catch (IOException e) {
                 Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, e);
                 System.err.println("Error receiving message from client: IOException" + e);
@@ -42,46 +43,33 @@ public class Server {
         }
     }
 
-    public void handleClient(Socket clientSocket) throws IOException, ClassNotFoundException {
-        Message received;
-        Message toSend;
+    public boolean handleClient(Socket clientSocket) throws IOException, ClassNotFoundException {
+        Message received = null;
+        NodeInfo receivedInfo = null;
+        Message toSend = null;
 
-        DataInputStream fromClient;
-        DataOutputStream toClient;
+        DataInputStream fromClient = new DataInputStream(clientSocket.getInputStream());
 
-        ObjectInputStream fromClientObj;
-        ObjectOutputStream toClientObj;
-
-        try {
-            System.out.println("FIRST");
-            fromClient = new DataInputStream(clientSocket.getInputStream());
-            System.out.println("SECOND");
-            fromClientObj = new ObjectInputStream(fromClient);
-
-            System.out.println("THIRD");
-            toClient = new DataOutputStream(clientSocket.getOutputStream());
-            System.out.println("FOURTH");
-            toClientObj = new ObjectOutputStream(toClient);
-            System.out.println("DONE");
-        } catch (IOException e) {
-            System.err.println("Error opening network streams ");
-            return;
-        }
+        ObjectInputStream fromClientObj = new ObjectInputStream(fromClient);
+        ObjectOutputStream toClientObj = null;
 
         received = (Message) fromClientObj.readObject();
-        System.out.println(((NodeInfo )received.content).name);
-
         switch (received.type) {
             case JOIN:
-                connectedClients.add((NodeInfo) received.content);
+                receivedInfo = (NodeInfo) received.content;
+                connectedClients.add(receivedInfo);
+                toSend = new Message("Welcome to the server " + receivedInfo.name, MessageTypes.NOTE);
                 break;
             case NOTE:
+                toSend = new Message(received.content, MessageTypes.NOTE);
                 break;
             case LEAVE:
             case SHUTDOWN:
+                toSend = new Message(receivedInfo.name + " has left the server", MessageTypes.NOTE);
                 connectedClients.remove((NodeInfo) received.content);
                 break;
             case SHUTDOWN_ALL:
+                toSend = new Message("Shutdown all initiated by " + receivedInfo.name, MessageTypes.SHUTDOWN);
                 break;
         }
 
@@ -90,6 +78,26 @@ public class Server {
         } catch (IOException e) {
             System.err.println("Error closing socket to client");
         }
+
+        if (toSend != null) {
+            for (NodeInfo nodeInfo : connectedClients) {
+                send(nodeInfo, toSend);
+            }
+        }
+
+        if (received.type == MessageTypes.SHUTDOWN_ALL) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public void send(NodeInfo nodeInfo, Message message) throws IOException {
+        Socket clientSocket = new Socket(nodeInfo.ip, nodeInfo.port);
+        DataOutputStream toClient = new DataOutputStream(clientSocket.getOutputStream());
+        ObjectOutputStream toClientObj = new ObjectOutputStream(toClient);
+
+        toClientObj.writeObject(message);
     }
 
     public static void main(String args[]) throws Exception {
