@@ -113,6 +113,10 @@ class Client {
                     isRunning = false;
                 }
 
+                if (message.type == MessageTypes.LEAVE) {
+                    System.out.println("You have left the server.");
+                }
+
                 try {
                     socket = new Socket(serverIp, serverPort);
                     send(message, socket);
@@ -122,11 +126,13 @@ class Client {
                     System.exit(1);
                 }
             }
+
+            System.out.println("Goodbye " + name);
+            // Exit 0 not return so we also terminate the other thread
+            System.exit(0);
         }
 
         public Message parse(String input) {
-            String[] splitInput;
-
             NodeInfo node = new NodeInfo(clientIp, clientPort, name);
             Message message;
 
@@ -139,7 +145,7 @@ class Client {
             } else if (input.toUpperCase(Locale.ROOT).equals("SHUTDOWN ALL")) {
                 message = new Message(node, MessageTypes.SHUTDOWN_ALL);
             } else {
-                message = new Message(input, MessageTypes.NOTE);
+                message = new Message(name + ": " + input, MessageTypes.NOTE);
             }
 
             return message;

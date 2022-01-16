@@ -1,3 +1,5 @@
+import org.w3c.dom.Node;
+
 import java.io.*;
 import java.net.*;
 
@@ -49,27 +51,28 @@ public class Server {
         Message toSend = null;
 
         DataInputStream fromClient = new DataInputStream(clientSocket.getInputStream());
-
         ObjectInputStream fromClientObj = new ObjectInputStream(fromClient);
-        ObjectOutputStream toClientObj = null;
 
         received = (Message) fromClientObj.readObject();
+        if (received.type != MessageTypes.NOTE) {
+            receivedInfo = (NodeInfo) received.content;
+        }
+
         switch (received.type) {
             case JOIN:
-                receivedInfo = (NodeInfo) received.content;
                 connectedClients.add(receivedInfo);
-                toSend = new Message("Welcome to the server " + receivedInfo.name, MessageTypes.NOTE);
+                toSend = new Message(receivedInfo.name + " has joined the server.", MessageTypes.NOTE);
                 break;
             case NOTE:
                 toSend = new Message(received.content, MessageTypes.NOTE);
                 break;
             case LEAVE:
             case SHUTDOWN:
-                toSend = new Message(receivedInfo.name + " has left the server", MessageTypes.NOTE);
-                connectedClients.remove((NodeInfo) received.content);
+                toSend = new Message(receivedInfo.name + " has left the server.", MessageTypes.NOTE);
+                removeClient(receivedInfo);
                 break;
             case SHUTDOWN_ALL:
-                toSend = new Message("Shutdown all initiated by " + receivedInfo.name, MessageTypes.SHUTDOWN);
+                toSend = new Message("Shutdown all initiated by " + receivedInfo.name + ".", MessageTypes.SHUTDOWN);
                 break;
         }
 
@@ -98,6 +101,21 @@ public class Server {
         ObjectOutputStream toClientObj = new ObjectOutputStream(toClient);
 
         toClientObj.writeObject(message);
+    }
+
+    public void removeClient(NodeInfo receivedInfo) {
+        NodeInfo tempNode;
+
+        for (int i = 0; i < connectedClients.size(); i++) {
+            tempNode = connectedClients.get(i);
+
+            if (tempNode.name.equals(receivedInfo.name)
+                    && tempNode.ip.equals(receivedInfo.ip)
+                    && tempNode.port == receivedInfo.port) {
+                connectedClients.remove(i);
+                return;
+            }
+        }
     }
 
     public static void main(String args[]) throws Exception {
