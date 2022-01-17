@@ -5,6 +5,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 
 public class Server {
     private final static int PORT = 23657;
@@ -12,7 +13,7 @@ public class Server {
     private static ServerSocket serverSocket;
     ArrayList<NodeInfo> connectedClients;
 
-    private String[] types = {"JOIN", "LEAVE", "SHUTDOWN", "SHUTDOWN_ALL"};
+    private EnumMap<MessageTypes, String> typeToStr = new EnumMap<MessageTypes, String>(MessageTypes.class);
 
     public Server() {
         try {
@@ -23,10 +24,15 @@ public class Server {
             System.exit(1);
         }
 
+        typeToStr.put(MessageTypes.JOIN, "JOIN");
+        typeToStr.put(MessageTypes.LEAVE, "LEAVE");
+        typeToStr.put(MessageTypes.SHUTDOWN, "SHUTDOWN");
+        typeToStr.put(MessageTypes.SHUTDOWN_ALL, "SHUTDOWN_ALL");
+
         connectedClients = new ArrayList<NodeInfo>();
     }
 
-    public void runServerLoop() throws IOException {
+    public void runServerLoop() {
         boolean isRunning = true;
         System.out.println("Chat server started");
         System.out.println("Receiving messages on port #" + PORT + "\n");
@@ -55,7 +61,7 @@ public class Server {
         received = (Message) fromClientObj.readObject();
         if (received.type != MessageTypes.NOTE) {
             receivedInfo = (NodeInfo) received.content;
-            System.out.println("Received " + types[received.type.ordinal() - 1] + " command from " + receivedInfo.name);
+            System.out.println("Received " + typeToStr.get(received.type) + " command from " + receivedInfo.name);
         } else {
             System.out.println("Received note: \"" + received.content + "\"");
         }
@@ -120,7 +126,7 @@ public class Server {
         }
     }
 
-    public static void main(String args[]) throws Exception {
+    public static void main(String args[]) {
         Server server = new Server();
         server.runServerLoop();
     }
