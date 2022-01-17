@@ -57,7 +57,6 @@ public class Server {
         received = (Message) fromClientObj.readObject();
         if (received.type != MessageTypes.NOTE) {
             receivedInfo = (NodeInfo) received.content;
-//            received x request from y
             System.out.println("Received " + types[received.type.ordinal() - 1] + " command from " + receivedInfo.name);
         } else {
             System.out.println("Received note: \"" + received.content + "\"");
