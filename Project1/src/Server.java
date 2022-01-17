@@ -31,7 +31,7 @@ public class Server {
     public void runServerLoop() throws IOException {
         boolean isRunning = true;
         System.out.println("Chat server started");
-        System.out.println("Receiving messages on port #" + PORT);
+        System.out.println("Receiving messages on port #" + PORT + "\n");
 
         while (isRunning) {
             try {
