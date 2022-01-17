@@ -15,8 +15,8 @@ class Client {
     private int clientPort;
     private String name;
 
-    private ServerListen serverListen = null;
-    private UserListen userListen = null;
+    private static ServerListen serverListen = null;
+    private static UserListen userListen = null;
 
     Client() throws java.io.IOException {
         File properties = new File("properties.txt");
@@ -163,6 +163,6 @@ class Client {
     }
 
     public static void main(String[] args) throws Exception {
-        Client client = new Client();
+        new Client();
     }
 }

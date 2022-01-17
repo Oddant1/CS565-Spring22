@@ -1,3 +1,7 @@
 public enum MessageTypes {
-    JOIN,NOTE,LEAVE,SHUTDOWN,SHUTDOWN_ALL;
+    NOTE,
+    JOIN,
+    LEAVE,
+    SHUTDOWN,
+    SHUTDOWN_ALL
 }

@@ -14,6 +14,8 @@ public class Server {
     private static ServerSocket serverSocket;
     ArrayList<NodeInfo> connectedClients;
 
+    private String[] types = {"JOIN", "LEAVE", "SHUTDOWN", "SHUTDOWN_ALL"};
+
     public Server() {
         try {
             serverSocket = new ServerSocket(PORT);
@@ -29,10 +31,9 @@ public class Server {
     public void runServerLoop() throws IOException {
         boolean isRunning = true;
         System.out.println("Chat server started");
+        System.out.println("Receiving messages on port #" + PORT);
 
         while (isRunning) {
-            System.out.println("Receiving messages on port #" + PORT);
-
             try {
                 isRunning = handleClient(serverSocket.accept());
             } catch (IOException e) {
@@ -56,6 +57,10 @@ public class Server {
         received = (Message) fromClientObj.readObject();
         if (received.type != MessageTypes.NOTE) {
             receivedInfo = (NodeInfo) received.content;
+//            received x request from y
+            System.out.println("Received " + types[received.type.ordinal() - 1] + " command from " + receivedInfo.name);
+        } else {
+            System.out.println("Received note: \"" + received.content + "\"");
         }
 
         switch (received.type) {
