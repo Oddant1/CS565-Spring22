@@ -13,24 +13,25 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 class Client {
+    boolean hasJoined = false;
+
     private String serverIp;
     private int serverPort;
 
     private String clientIp;
     private int clientPort;
-    private String name;
+    private final String name;
 
-    private static ServerListen serverListen = null;
-    private static UserListen userListen = null;
-
-    Client() throws java.io.IOException {
+    Client() {
         File properties = new File("properties.txt");
         Scanner scanner = new Scanner(System.in);
 
+        // Accept a name and prompt the user to join the chat
         System.out.println("Please enter your name: ");
         name = scanner.nextLine();
         System.out.println("Hello " + name + ". Please type \"JOIN\" to enter the server");
 
+        // Get client and server data out of properties file
         try {
             scanner = new Scanner(properties);
 
@@ -45,20 +46,21 @@ class Client {
             System.exit(1);
         }
 
-        serverListen = new ServerListen();
-        userListen = new UserListen();
+        // Init and run our threads
+        Receiver receiver = new Receiver();
+        Sender sender = new Sender();
 
-        serverListen.start();
-        userListen.start();
+        receiver.start();
+        sender.start();
     }
 
-    class ServerListen extends Thread {
+    class Receiver extends Thread {
         ServerSocket serverSocket;
 
         public void run() {
-            Message message = null;
             boolean isRunning = true;
 
+            // Open a server socket listening to the server
             try {
                 serverSocket = new ServerSocket(clientPort);
             } catch (IOException e) {
@@ -67,12 +69,14 @@ class Client {
                 System.exit(1);
             }
 
+            // Wait for messages from the server
             while (isRunning) {
                 try {
                     isRunning = read(serverSocket.accept());
                 } catch (IOException e) {
                     Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, e);
                     System.err.println("Error receiving message from client: IOException" + e);
+                    System.exit(1);
                 }
             }
         }
@@ -82,46 +86,71 @@ class Client {
             DataInputStream fromServer = new DataInputStream(serverSocket.getInputStream());
             ObjectInputStream fromServerObj = new ObjectInputStream(fromServer);
 
+            // Read the message the server sent
             try {
                 message = (Message) fromServerObj.readObject();
             } catch (ClassNotFoundException e) {
                 Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, e);
                 System.err.println("Error receiving message from server: ClassNotFoundException" + e);
+                System.exit(1);
             }
 
-            if (message.type == MessageTypes.NOTE) {
+            // Intellij doesn't understand that these messages are guaranteed to not be null because if they failed to
+            // init we would error out.
+            if (message != null && message.type == MessageTypes.NOTE) {
                 System.out.println((message.content));
-            } else if (message.type == MessageTypes.SHUTDOWN) {
-                return false;
+            } else {
+                // If someone sent a shutdown all the server will have sent a shutdown request to the client
+                return message != null && message.type != MessageTypes.SHUTDOWN;
             }
 
             return  true;
         }
     }
 
-    class UserListen extends Thread {
+    class Sender extends Thread {
         Socket socket;
 
         public void run() {
-            Scanner scanner = null;
+            Scanner scanner;
             String input;
-            Message message = null;
+            Message message;
             boolean isRunning = true;
 
+            // Wait on user input
             while (isRunning) {
                 scanner = new Scanner(System.in);
                 input = scanner.nextLine();
                 message = parse(input);
 
-                if (message.type == MessageTypes.SHUTDOWN ||
-                        message.type == MessageTypes.SHUTDOWN_ALL) {
+                // Ensure that this is the last iteration of the loop if we received a shutdown. If the user is
+                // connected, this will remove it from the server's client list. Otherwise, it will just close
+                if (message.type == MessageTypes.SHUTDOWN || message.type == MessageTypes.SHUTDOWN_ALL) {
                     isRunning = false;
                 }
 
-                if (message.type == MessageTypes.LEAVE) {
-                    System.out.println("You have left the server.");
+                // Ensure the user has joined before letting them send messages
+                if (message.type == MessageTypes.JOIN) {
+                    if (hasJoined) {
+                        System.out.println("You have already joined the server.");
+                        continue;
+                    } else {
+                        hasJoined = true;
+                    }
+                } else if (!hasJoined) {
+                    if (message.type != MessageTypes.SHUTDOWN) {
+                        System.out.println("You must join the server before attempting to communicate with it.");
+                    }
+                    continue;
                 }
 
+                // Indicate that we are not connected if we leave and inform the user they may reconnect
+                if (message.type == MessageTypes.LEAVE) {
+                    System.out.println("You have left the server. Type \"JOIN\" again to reconnect.");
+                    hasJoined = false;
+                }
+
+                // Send their message to the client
                 try {
                     socket = new Socket(serverIp, serverPort);
                     send(message, socket);
@@ -133,32 +162,25 @@ class Client {
             }
 
             System.out.println("Goodbye " + name);
-            // Exit 0 not return so we also terminate the other thread
+            // Exit 0 not return, so we also terminate the other thread
             System.exit(0);
         }
 
         public Message parse(String input) {
             NodeInfo node = new NodeInfo(clientIp, clientPort, name);
-            Message message;
-
-            if (input.toUpperCase(Locale.ROOT).equals("JOIN")) {
-                message = new Message(node, MessageTypes.JOIN);
-            } else if (input.toUpperCase(Locale.ROOT).equals("LEAVE")) {
-                message = new Message(node, MessageTypes.LEAVE);
-            } else if (input.toUpperCase(Locale.ROOT).equals("SHUTDOWN")) {
-                message = new Message(node, MessageTypes.SHUTDOWN);
-            } else if (input.toUpperCase(Locale.ROOT).equals("SHUTDOWN ALL")) {
-                message = new Message(node, MessageTypes.SHUTDOWN_ALL);
-            } else {
-                message = new Message(name + ": " + input, MessageTypes.NOTE);
-            }
-
-            return message;
+            // Intellij suggested this "advanced switch." It's neat.
+            return switch (input.toUpperCase(Locale.ROOT)) {
+                case "JOIN" -> new Message(node, MessageTypes.JOIN);
+                case "LEAVE" -> new Message(node, MessageTypes.LEAVE);
+                case "SHUTDOWN" -> new Message(node, MessageTypes.SHUTDOWN);
+                case "SHUTDOWN ALL" -> new Message(node, MessageTypes.SHUTDOWN_ALL);
+                default -> new Message(name + ": " + input, MessageTypes.NOTE);
+            };
         }
 
         public void send(Message message, Socket socket) throws IOException {
-            DataOutputStream toServer = null;
-            ObjectOutputStream toServerObj = null;
+            DataOutputStream toServer;
+            ObjectOutputStream toServerObj;
 
             toServer = new DataOutputStream(socket.getOutputStream());
             toServerObj = new ObjectOutputStream(toServer);
@@ -167,7 +189,8 @@ class Client {
         }
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
+        // Kickstart the whole thing
         new Client();
     }
 }
