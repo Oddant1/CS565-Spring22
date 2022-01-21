@@ -1,8 +1,10 @@
+package Utils;
+
 import java.io.Serializable;
 
 public class Message implements Serializable {
-    Object content;
-    MessageTypes type;
+    public Object content;
+    public MessageTypes type;
 
     public Message(Object initContent, MessageTypes initType) {
         content = initContent;

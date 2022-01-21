@@ -1,3 +1,8 @@
+package Client;
+
+import Utils.*;
+import Server.*;
+
 import java.util.Locale;
 import java.util.Scanner;
 

@@ -1,3 +1,5 @@
+package Utils;
+
 public enum MessageTypes {
     NOTE,
     JOIN,
