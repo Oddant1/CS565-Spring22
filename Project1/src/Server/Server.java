@@ -61,11 +61,10 @@ public class Server {
         NodeInfo receivedInfo = null;
         Message toSend = null;
 
-        DataInputStream fromClient = new DataInputStream(clientSocket.getInputStream());
-        ObjectInputStream fromClientObj = new ObjectInputStream(fromClient);
+        ObjectInputStream fromClient = new ObjectInputStream(clientSocket.getInputStream());
 
         // Receive our message
-        received = (Message) fromClientObj.readObject();
+        received = (Message) fromClient.readObject();
 
         // Close our connection with the client
         try {
@@ -118,10 +117,9 @@ public class Server {
 
     public void send(NodeInfo nodeInfo, Message message) throws IOException {
         Socket clientSocket = new Socket(nodeInfo.ip, nodeInfo.port);
-        DataOutputStream toClient = new DataOutputStream(clientSocket.getOutputStream());
-        ObjectOutputStream toClientObj = new ObjectOutputStream(toClient);
+        ObjectOutputStream toClient = new ObjectOutputStream(clientSocket.getOutputStream());
 
-        toClientObj.writeObject(message);
+        toClient.writeObject(message);
     }
 
     public void removeClient(NodeInfo receivedInfo) {

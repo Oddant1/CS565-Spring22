@@ -47,11 +47,8 @@ class Client {
         }
 
         // Init and run our threads
-        Receiver receiver = new Receiver();
-        Sender sender = new Sender();
-
-        receiver.start();
-        sender.start();
+        new Receiver().start();
+        new Sender().start();
     }
 
     class Receiver extends Thread {
@@ -83,12 +80,11 @@ class Client {
 
         public boolean read(Socket serverSocket) throws IOException {
             Message message = null;
-            DataInputStream fromServer = new DataInputStream(serverSocket.getInputStream());
-            ObjectInputStream fromServerObj = new ObjectInputStream(fromServer);
+            ObjectInputStream fromServer = new ObjectInputStream(serverSocket.getInputStream());
 
             // Read the message the server sent
             try {
-                message = (Message) fromServerObj.readObject();
+                message = (Message) fromServer.readObject();
             } catch (ClassNotFoundException e) {
                 Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, e);
                 System.err.println("Error receiving message from server: ClassNotFoundException" + e);
@@ -179,13 +175,8 @@ class Client {
         }
 
         public void send(Message message, Socket socket) throws IOException {
-            DataOutputStream toServer;
-            ObjectOutputStream toServerObj;
-
-            toServer = new DataOutputStream(socket.getOutputStream());
-            toServerObj = new ObjectOutputStream(toServer);
-
-            toServerObj.writeObject(message);
+            ObjectOutputStream toServer = new ObjectOutputStream(socket.getOutputStream());
+            toServer.writeObject(message);
         }
     }
 
