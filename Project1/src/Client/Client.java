@@ -76,6 +76,9 @@ class Client {
                     System.exit(1);
                 }
             }
+
+            // Exit 0 not return, so we also terminate the other thread
+            System.exit(0);
         }
 
         public boolean read(Socket serverSocket) throws IOException {
@@ -93,14 +96,12 @@ class Client {
 
             // Intellij doesn't understand that these messages are guaranteed to not be null because if they failed to
             // init we would error out.
-            if (message != null && message.type == MessageTypes.NOTE) {
-                System.out.println((message.content));
-            } else {
-                // If someone sent a shutdown all the server will have sent a shutdown request to the client
-                return message != null && message.type != MessageTypes.SHUTDOWN;
+            if (message != null) {
+                System.out.println(message.content);
             }
 
-            return  true;
+            // If someone sent a shutdown all the server will have sent a shutdown request to the client
+            return message != null && message.type != MessageTypes.SHUTDOWN;
         }
     }
 
