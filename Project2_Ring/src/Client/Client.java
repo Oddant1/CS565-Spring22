@@ -10,9 +10,6 @@ public class Client
 {
     private final static String DEFAULT_PROPERTIES_PATH = "properties.txt";
 
-    private final NodeInfo myInfo;
-    public NodeInfo successorInfo;
-
     private final Sender mySender;
     private final Receiver myReceiver;
 
@@ -44,6 +41,10 @@ public class Client
 
     private Client(File properties)
     {
+        // These objects are shared with the Sender and Receiver threads
+        final NodeInfo myInfo;
+        final NodeInfo successorInfo;
+
         Scanner scanner = null;
 
         String name;
@@ -75,9 +76,9 @@ public class Client
                 "Hello " + name + ". Please type \"JOIN\" to enter the chat. Please also type the ip and port of " +
                 "the peer you are joining if trying to join an existing chat");
 
-        // Create the NodeInfo for this client and an uninitialized object for successor info
+        // Create the NodeInfo for this client and point our successor at ourselves
         myInfo = new NodeInfo(name, ip, port);
-        successorInfo = new NodeInfo();
+        successorInfo = new NodeInfo(myInfo);
 
         // Create the sender and receiver for this client
         mySender = new Sender(myInfo, successorInfo);

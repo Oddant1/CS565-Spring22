@@ -2,9 +2,6 @@ package Client;
 
 import Utils.*;
 
-import java.util.Locale;
-import java.util.Scanner;
-
 import java.io.*;
 import java.net.*;
 
@@ -14,7 +11,7 @@ import java.util.logging.Logger;
 public class Receiver extends Thread implements MessageTypes
 {
     private final NodeInfo myInfo;
-    private NodeInfo successorInfo;
+    private final NodeInfo successorInfo;
 
     public Receiver(NodeInfo initMyInfo, NodeInfo initSuccessorInfo)
     {
@@ -60,52 +57,99 @@ public class Receiver extends Thread implements MessageTypes
 
     private boolean read(Socket serverSocket) throws IOException
     {
-        Message message = null;
-        ObjectInputStream fromServer = new ObjectInputStream(serverSocket.getInputStream());
+        Message incomingMessage = null;
+        ObjectInputStream fromOther = new ObjectInputStream(serverSocket.getInputStream());
 
         // Read the message the server sent
         try
         {
-            message = (Message) fromServer.readObject();
+            incomingMessage = (Message) fromOther.readObject();
         }
         catch (ClassNotFoundException e)
         {
             Logger.getLogger(Receiver.class.getName()).log(Level.SEVERE, null, e);
-            System.err.println("Error receiving message from predecessor: ClassNotFoundException" + e);
+            System.err.println("Error receiving message: ClassNotFoundException" + e);
             System.exit(1);
         }
 
-        System.out.println(message.note);
+        // Report the note from the incoming message
+        System.out.println(incomingMessage.origin.name + ": " + incomingMessage.note);
+        // Handle the message appropriately
+        handle(incomingMessage);
 
-        if (message.type == JOIN && message.successor.ip.equals(myInfo.ip) && message.successor.port == myInfo.port)
-        {
-            successorInfo.name = message.origin.name;
-            successorInfo.ip = message.origin.ip;
-            successorInfo.port = message.origin.port;
-        }
-
-        // If my successor isn't the origin of the message, forward the message
-        if (!successorInfo.ip.equals(message.origin.ip) && successorInfo.port != message.origin.port)
-        {
-            forward(message);
-        }
-
-        // If someone sent a shutdown all the message propagated will be of type SHUTDOWN_ALL
-        return message.type != MessageTypes.SHUTDOWN_ALL;
+        // If someone sent a shutdown all the message propagated will be of type SHUTDOWN_ALL, and we want to exit
+        return incomingMessage.type != MessageTypes.SHUTDOWN_ALL;
     }
 
-    private void forward(Message receivedMessage)
+    private void handle(Message incomingMessage)
+    {
+        Message outgoingMessage = null;
+
+        switch (incomingMessage.type)
+        {
+            case JOIN:
+                // Deal with adding the node to the chat
+                handleJoin(incomingMessage);
+                // Announce the newly joined node to the chat
+                send(new Message(myInfo, successorInfo, incomingMessage.note, NOTE));
+                break;
+            case NOTE:
+                outgoingMessage = incomingMessage;
+                break;
+            case LEAVE:
+            case SHUTDOWN:
+            case SHUTDOWN_ALL:
+                if (incomingMessage.origin.equals(successorInfo))
+                {
+                    successorInfo.syncWrite(incomingMessage.other.name, incomingMessage.other.ip, incomingMessage.other.port);
+                }
+                else
+                {
+                    outgoingMessage = incomingMessage;
+                }
+
+                break;
+            case UPDATE:
+                successorInfo.syncWrite(incomingMessage.other.name, incomingMessage.other.ip, incomingMessage.other.port);
+        }
+
+        // If my successor isn't the origin of the message, and if we have a message to send, forward the message
+        if (!successorInfo.equals(incomingMessage.origin) && outgoingMessage != null)
+        {
+            send(outgoingMessage);
+        }
+    }
+
+    // Join is a sort of special case message that requires special handling
+    private void handleJoin(Message incomingMessage)
+    {
+        // Create message to send to joining node
+        Message outgoingMessage;
+        NodeInfo oldSuccessorInfo = new NodeInfo(successorInfo);
+
+        // Update your successor to be the joining node
+        successorInfo.syncWrite(incomingMessage.origin.name, incomingMessage.origin.ip,
+                                incomingMessage.origin.port);
+
+        // Tell the joining node to update its info
+        outgoingMessage = new Message(myInfo, oldSuccessorInfo, "Sending your new successor info", UPDATE);
+
+        // Send updated info to the joining node
+        send(outgoingMessage);
+    }
+
+    private void send(Message outgoingMessage)
     {
         try
         {
             Socket socket = new Socket(successorInfo.ip, successorInfo.port);
             ObjectOutputStream toSuccessor = new ObjectOutputStream(socket.getOutputStream());
-            toSuccessor.writeObject(receivedMessage);
+            toSuccessor.writeObject(outgoingMessage);
         }
         catch (IOException e)
         {
             Logger.getLogger(Receiver.class.getName()).log(Level.SEVERE, null, e);
-            System.err.println("Error forwarding message to successor: IOException" + e);
+            System.err.println("Error sending message: IOException " + e);
             System.exit(1);
         }
     }

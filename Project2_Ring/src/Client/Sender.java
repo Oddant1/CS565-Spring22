@@ -14,7 +14,9 @@ import java.util.logging.Logger;
 public class Sender extends Thread implements MessageTypes
 {
     private final NodeInfo myInfo;
-    private NodeInfo successorInfo;
+    private final NodeInfo successorInfo;
+
+    boolean inChat = false;
 
     public Sender(NodeInfo initMyInfo, NodeInfo initSuccessorInfo)
     {
@@ -26,7 +28,6 @@ public class Sender extends Thread implements MessageTypes
     {
         Socket socket;
 
-        boolean inChat = false;
         boolean isRunning = true;
 
         Scanner scanner = new Scanner(System.in);
@@ -38,35 +39,26 @@ public class Sender extends Thread implements MessageTypes
             input = scanner.nextLine();
             toSend = parse(input);
 
-            // Some kinda parse error
-            if (toSend == null)
-            {
-                continue;
-            }
-
             if (toSend.type == JOIN)
             {
-                if (inChat)
-                {
-                    System.out.println("You have already joined the chat.");
-                }
-                else
-                {
-                    System.out.println("Welcome to the chat " + myInfo.name + ".");
-                    inChat = true;
-                }
-            }
-            else if (!inChat)
-            {
-                System.out.println("Please join a chat before attempting to send a message");
-                continue;
+                System.out.println("Welcome to the chat " + myInfo.name + ".");
             }
 
-            if (!toSend.origin.ip.equals(toSend.successor.ip) || toSend.origin.port != toSend.successor.port)
+            if (inChat)
             {
                 try
                 {
-                    socket = new Socket(successorInfo.ip, successorInfo.port);
+                    // If we are joining we are sending to the info entered by the user
+                    if (toSend.type == JOIN)
+                    {
+                        socket = new Socket(toSend.other.ip, toSend.other.port);
+                    }
+                    // Otherwise, send to our successor
+                    else
+                    {
+                        socket = new Socket(successorInfo.syncReadIP(), successorInfo.syncReadPort());
+                    }
+
                     send(toSend, socket);
                 } catch (IOException e)
                 {
@@ -74,52 +66,67 @@ public class Sender extends Thread implements MessageTypes
                     System.err.println("Failed to send message:\n" + e);
                     System.exit(1);
                 }
-            }
 
-            if (toSend.type == LEAVE)
-            {
-                isRunning = false;
-                inChat = false;
-            }
+                if (toSend.type == LEAVE)
+                {
+                    System.out.println("Goodbye " + myInfo.name + ", you may rejoin an existing chat or start your own");
+                    inChat = false;
+                }
 
-            if (toSend.type == SHUTDOWN || toSend.type == SHUTDOWN_ALL)
+                if (toSend.type == SHUTDOWN || toSend.type == SHUTDOWN_ALL)
+                {
+                    isRunning = false;
+                }
+            } else
             {
-                // Exit here to close entire process
-                System.exit(0);
+                System.out.println("Please join a chat before attempting to send a message");
             }
         }
+
+        // Exit here to close entire process
+        System.out.println("Goodbye " + myInfo.name);
+        System.exit(0);
     }
 
     private Message parse(String input)
     {
         // Split our string in case we have a join followed by args
         String[] splitInput = input.split(" ");
+        String messageType;
 
         // Message we will be sending
-        Message newMessage = null;
+        Message newMessage;
+        NodeInfo target;
 
-        switch (splitInput[0].toUpperCase(Locale.ROOT))
+        // Handle the user input being only whitespace. If it is, we want to send that whitespace as a note
+        if (splitInput.length > 0)
         {
-            case "JOIN":
-                if (splitInput.length == 1)
+            messageType = splitInput[0];
+        }
+        else
+        {
+            messageType = input;
+        }
+
+        switch (messageType.toUpperCase(Locale.ROOT))
+        {
+            case "JOIN" -> {
+                if (splitInput.length == 3)
+                {
+                    target = new NodeInfo("Target", splitInput[1], Integer.parseInt(splitInput[2]));
+                    newMessage = new Message(myInfo, target, myInfo.name + " has joined the chat.", JOIN);
+                } else
                 {
                     // If we are creating a new chat, we are effectively joining ourselves
                     newMessage = new Message(myInfo, myInfo, myInfo.name + " has joined the chat.", JOIN);
+                    System.out.println("You have started a new chat. Peers can join you at IP: " + myInfo.ip + " Port: " + myInfo.port);
                 }
-                else if (splitInput.length == 3)
-                {
-                    // Name here does not matter, only connection info
-                    successorInfo.ip = splitInput[1];
-                    successorInfo.port = Integer.parseInt(splitInput[2]);
-
-                    newMessage = new Message(myInfo, successorInfo, myInfo.name + " has joined the chat.", JOIN);
-                }
-                else
-                {
-                    System.out.println(
-                            "Please enter \"JOIN\" followed by no arguments or \"JOIN\" followed only by target IP " +
-                            "and port.");
-                }
+                inChat = true;
+            }
+            case "LEAVE" -> newMessage = new Message(myInfo, successorInfo, myInfo.name + " is leaving the chat.", LEAVE);
+            case "SHUTDOWN" -> newMessage = new Message(myInfo, successorInfo, myInfo.name + " is shutting down.", SHUTDOWN);
+            case "SHUTDOWN_ALL" -> newMessage = new Message(myInfo, successorInfo, myInfo.name + " initiated shutdown all.", SHUTDOWN_ALL);
+            default -> newMessage = new Message(myInfo, successorInfo, input, NOTE);
         }
 
         return newMessage;

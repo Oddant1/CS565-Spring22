@@ -15,17 +15,36 @@ public class NodeInfo implements Serializable
         port = initPort;
     }
 
-//    public NodeInfo(NodeInfo toCopy)
-//    {
-//        name = toCopy.name;
-//        ip = toCopy.ip;
-//        port = toCopy.port;
-//    }
-
-    public NodeInfo()
+    public NodeInfo(NodeInfo otherInfo)
     {
-        name = null;
-        ip = null;
-        port = -1;
+        name = otherInfo.name;
+        ip = otherInfo.ip;
+        port = otherInfo.port;
+    }
+
+    // Don't bother checking for name, we only really care about the connection information
+    public boolean equals(NodeInfo other)
+    {
+        return ip.equals(other.ip) && port == other.port;
+    }
+
+    /*******************************************************************************************************************
+     * Methods below this point used for synchronized access to successorInfo b/c that is a shared NodeInfo handle
+     ******************************************************************************************************************/
+    public synchronized void syncWrite(String newName, String newIP, int newPort)
+    {
+        name = newName;
+        ip = newIP;
+        port = newPort;
+    }
+
+    public synchronized String syncReadIP()
+    {
+        return ip;
+    }
+
+    public synchronized int syncReadPort()
+    {
+        return port;
     }
 }
