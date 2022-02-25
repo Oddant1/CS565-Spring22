@@ -31,6 +31,13 @@ public class NodeInfo implements Serializable
     /*******************************************************************************************************************
      * Methods below this point used for synchronized access to successorInfo b/c that is a shared NodeInfo handle
      ******************************************************************************************************************/
+    public synchronized void syncWrite(NodeInfo other)
+    {
+        name = other.name;
+        ip = other.ip;
+        port = other.port;
+    }
+
     public synchronized void syncWrite(String newName, String newIP, int newPort)
     {
         name = newName;
