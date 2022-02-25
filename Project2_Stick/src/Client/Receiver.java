@@ -101,7 +101,7 @@ public class Receiver extends Thread implements MessageTypes, Directions
             case SHUTDOWN_ALL:
                 if (incomingMessage.origin.equals(successorInfo))
                 {
-                    successorInfo.syncWrite(incomingMessage.other.name, incomingMessage.other.ip, incomingMessage.other.port);
+                    successorInfo.syncWrite(incomingMessage.other);
                 }
                 else
                 {
@@ -109,8 +109,10 @@ public class Receiver extends Thread implements MessageTypes, Directions
                 }
 
                 break;
-            case UPDATE:
-                successorInfo.syncWrite(incomingMessage.other.name, incomingMessage.other.ip, incomingMessage.other.port);
+            case UPDATE_PRED:
+                predecessorInfo.syncWrite(incomingMessage.other);
+            case UPDATE_SUCC:
+                successorInfo.syncWrite(incomingMessage.other);
         }
 
         // If my successor isn't the origin of the message, and if we have a message to send, forward the message
@@ -127,25 +129,41 @@ public class Receiver extends Thread implements MessageTypes, Directions
         Message toSend;
         NodeInfo oldSuccessorInfo = new NodeInfo(successorInfo);
 
+        // Tell our current successor to change their predecessor
+        toSend = new Message(myInfo, incomingMessage.origin, "A new node has joined, sending your new predecessor info.", UPDATE_PRED, SUCCESSOR);
+        send(toSend);
+
         // Update your successor to be the joining node
-        successorInfo.syncWrite(incomingMessage.origin.name, incomingMessage.origin.ip,
-                                incomingMessage.origin.port);
+        successorInfo.syncWrite(incomingMessage.origin);
 
         // Tell the joining node to update its info
-        toSend = new Message(myInfo, oldSuccessorInfo, "Sending your new successor info", UPDATE);
+        toSend = new Message(myInfo, oldSuccessorInfo, "Sending your new successor info", UPDATE_SUCC, SUCCESSOR);
 
         // Send updated info to the joining node
         send(toSend);
-        send(new Message(myInfo, successorInfo, incomingMessage.note, NOTE));
+
+
+//        send(new Message(myInfo, successorInfo, incomingMessage.note, NOTE));
     }
 
     private void send(Message toSend)
     {
+        Socket socket;
+        ObjectOutputStream toNeighbor;
+
         try
         {
-            Socket socket = new Socket(successorInfo.ip, successorInfo.port);
-            ObjectOutputStream toSuccessor = new ObjectOutputStream(socket.getOutputStream());
-            toSuccessor.writeObject(toSend);
+            if (toSend.direction == PREDECESSOR)
+            {
+                socket = new Socket(predecessorInfo.ip, predecessorInfo.port);
+            }
+            else
+            {
+                socket = new Socket(successorInfo.ip, successorInfo.port);
+            }
+
+            toNeighbor = new ObjectOutputStream(socket.getOutputStream());
+            toNeighbor.writeObject(toSend);
         }
         catch (IOException e)
         {

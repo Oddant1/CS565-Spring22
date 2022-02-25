@@ -16,7 +16,7 @@ public class Sender extends Thread implements MessageTypes, Directions
     private final NodeInfo myInfo;
     private final NodeInfo predecessorInfo;
     private final NodeInfo successorInfo;
-    
+
     public Sender(NodeInfo initMyInfo, NodeInfo initPredecessorInfo, NodeInfo initSuccessorInfo)
     {
         myInfo = initMyInfo;
@@ -38,19 +38,16 @@ public class Sender extends Thread implements MessageTypes, Directions
             input = scanner.nextLine();
             toSend = parse(input);
 
-            if ((toSend.type == JOIN && !inChat) || (toSend.type != JOIN && inChat))
+            // This should only happen if we just started a new chat
+            if (toSend == null && !inChat)
+            {
+                System.out.println("You have started a new chat. Peers can join you at IP: " + myInfo.ip + " Port: " + myInfo.port);
+            }
+            else if (toSend != null && (toSend.type == JOIN && !inChat) || (toSend.type != JOIN && inChat))
             {
                 if (toSend.type == JOIN)
                 {
-                    if (toSend.other.equals(myInfo))
-                    {
-                        System.out.println("You have started a new chat. Peers can join you at IP: " + myInfo.ip + " Port: " + myInfo.port);
-                    }
-                    else
-                    {
-                        System.out.println("Welcome to the chat " + myInfo.name + ".");
-                    }
-
+                    System.out.println("Welcome to the chat " + myInfo.name + ".");
                     inChat = true;
                 }
 
@@ -93,7 +90,7 @@ public class Sender extends Thread implements MessageTypes, Directions
         String messageType;
 
         // Message we will be sending
-        Message newMessage;
+        Message newMessage = null;
         NodeInfo target;
 
         // Handle the user input being only whitespace. If it is, we want to send that whitespace as a note
@@ -113,14 +110,9 @@ public class Sender extends Thread implements MessageTypes, Directions
                 if (splitInput.length == 3)
                 {
                     target = new NodeInfo("Target", splitInput[1], Integer.parseInt(splitInput[2]));
-                    // Temporarily set our successor to the target, it will send us new successor info
-                    successorInfo.syncWrite(target);
+                    // Set our predecessor
+                    predecessorInfo.syncWrite(target);
                     newMessage = new Message(myInfo, target, myInfo.name + " has joined the chat.", JOIN);
-                }
-                else
-                {
-                    // If we are creating a new chat, we are effectively joining ourselves
-                    newMessage = new Message(myInfo, myInfo, myInfo.name + " has joined the chat.", JOIN);
                 }
             }
             case "LEAVE" -> newMessage = new Message(myInfo, successorInfo, myInfo.name + " is leaving the chat.", LEAVE);
@@ -159,6 +151,5 @@ public class Sender extends Thread implements MessageTypes, Directions
             System.err.println("Failed to send message:\n" + e);
             System.exit(1);
         }
-
     }
 }
