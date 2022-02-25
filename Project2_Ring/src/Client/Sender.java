@@ -16,8 +16,6 @@ public class Sender extends Thread implements MessageTypes
     private final NodeInfo myInfo;
     private final NodeInfo successorInfo;
 
-    boolean inChat = false;
-
     public Sender(NodeInfo initMyInfo, NodeInfo initSuccessorInfo)
     {
         myInfo = initMyInfo;
@@ -26,6 +24,7 @@ public class Sender extends Thread implements MessageTypes
 
     public void run()
     {
+        boolean inChat = false;
         boolean isRunning = true;
 
         Scanner scanner = new Scanner(System.in);
