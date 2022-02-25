@@ -109,17 +109,28 @@ public class Receiver extends Thread implements MessageTypes, Directions
                 }
 
                 break;
+            // Ensure we don't have the same node as both predecessor and successor
             case UPDATE_PRED:
-                predecessorInfo.syncWrite(incomingMessage.other);
+                if (!incomingMessage.other.equals(successorInfo))
+                {
+                    predecessorInfo.syncWrite(incomingMessage.other);
+                }
+
+                break;
             case UPDATE_SUCC:
-                successorInfo.syncWrite(incomingMessage.other);
+                if (!incomingMessage.other.equals(predecessorInfo))
+                {
+                    successorInfo.syncWrite(incomingMessage.other);
+                }
         }
 
-        // If my successor isn't the origin of the message, and if we have a message to send, forward the message
-        if (!successorInfo.equals(incomingMessage.origin) && toSend != null)
+        // Don't send the message to yourself if you are at the end of the stick in that direction
+        if (toSend != null && ((toSend.direction == SUCCESSOR && !successorInfo.equals(myInfo))
+                || (toSend.direction == PREDECESSOR && !predecessorInfo.equals(myInfo))))
         {
             send(toSend);
         }
+
     }
 
     // Join is a sort of special case message that requires special handling
@@ -148,22 +159,25 @@ public class Receiver extends Thread implements MessageTypes, Directions
 
     private void send(Message toSend)
     {
-        Socket socket;
+        Socket socket = null;
         ObjectOutputStream toNeighbor;
 
         try
         {
-            if (toSend.direction == PREDECESSOR)
+            if (toSend.direction == PREDECESSOR && !predecessorInfo.equals(myInfo))
             {
                 socket = new Socket(predecessorInfo.ip, predecessorInfo.port);
             }
-            else
+            else if (toSend.direction == SUCCESSOR && !successorInfo.equals(myInfo))
             {
                 socket = new Socket(successorInfo.ip, successorInfo.port);
             }
 
-            toNeighbor = new ObjectOutputStream(socket.getOutputStream());
-            toNeighbor.writeObject(toSend);
+            if (socket != null)
+            {
+                toNeighbor = new ObjectOutputStream(socket.getOutputStream());
+                toNeighbor.writeObject(toSend);
+            }
         }
         catch (IOException e)
         {

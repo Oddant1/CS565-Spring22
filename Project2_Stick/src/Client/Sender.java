@@ -42,8 +42,9 @@ public class Sender extends Thread implements MessageTypes, Directions
             if (toSend == null && !inChat)
             {
                 System.out.println("You have started a new chat. Peers can join you at IP: " + myInfo.ip + " Port: " + myInfo.port);
+                inChat = true;
             }
-            else if (toSend != null && (toSend.type == JOIN && !inChat) || (toSend.type != JOIN && inChat))
+            else if (toSend != null && ((toSend.type == JOIN && !inChat) || (toSend.type != JOIN && inChat)))
             {
                 if (toSend.type == JOIN)
                 {
@@ -51,11 +52,14 @@ public class Sender extends Thread implements MessageTypes, Directions
                     inChat = true;
                 }
 
-                // Don't bother sending things to ourselves if we're alone in the chat
-                if (!successorInfo.equals(myInfo))
+                if (toSend.direction == BOTH)
                 {
+                    toSend.direction = PREDECESSOR;
                     send(toSend);
+                    toSend.direction = SUCCESSOR;
                 }
+
+                send(toSend);
 
                 if (toSend.type == LEAVE)
                 {
@@ -112,13 +116,13 @@ public class Sender extends Thread implements MessageTypes, Directions
                     target = new NodeInfo("Target", splitInput[1], Integer.parseInt(splitInput[2]));
                     // Set our predecessor
                     predecessorInfo.syncWrite(target);
-                    newMessage = new Message(myInfo, target, myInfo.name + " has joined the chat.", JOIN);
+                    newMessage = new Message(myInfo, target, myInfo.name + " has joined the chat.", JOIN, PREDECESSOR);
                 }
             }
-            case "LEAVE" -> newMessage = new Message(myInfo, successorInfo, myInfo.name + " is leaving the chat.", LEAVE);
-            case "SHUTDOWN" -> newMessage = new Message(myInfo, successorInfo, myInfo.name + " is shutting down.", SHUTDOWN);
-            case "SHUTDOWN_ALL" -> newMessage = new Message(myInfo, successorInfo, myInfo.name + " initiated shutdown all.", SHUTDOWN_ALL);
-            default -> newMessage = new Message(myInfo, successorInfo, input, NOTE);
+//            case "LEAVE" -> newMessage = new Message(myInfo, successorInfo, myInfo.name + " is leaving the chat.", LEAVE);
+//            case "SHUTDOWN" -> newMessage = new Message(myInfo, successorInfo, myInfo.name + " is shutting down.", SHUTDOWN);
+//            case "SHUTDOWN_ALL" -> newMessage = new Message(myInfo, successorInfo, myInfo.name + " initiated shutdown all.", SHUTDOWN_ALL);
+            default -> newMessage = new Message(myInfo, successorInfo, input, NOTE, BOTH);
         }
 
         return newMessage;
@@ -126,29 +130,30 @@ public class Sender extends Thread implements MessageTypes, Directions
 
     private void send(Message toSend)
     {
-        Socket socket;
-        ObjectOutputStream toSuccessor;
+        Socket socket = null;
+        ObjectOutputStream toNeighbor;
 
         try
         {
-            // If we are joining we are sending to the info entered by the user
-            if (toSend.type == JOIN)
+            if (toSend.direction == PREDECESSOR && !predecessorInfo.equals(myInfo))
             {
-                socket = new Socket(toSend.other.ip, toSend.other.port);
+                socket = new Socket(predecessorInfo.ip, predecessorInfo.port);
             }
-            // Otherwise, send to our successor
-            else
+            else if (toSend.direction == SUCCESSOR && !successorInfo.equals(myInfo))
             {
-                socket = new Socket(successorInfo.syncReadIP(), successorInfo.syncReadPort());
+                socket = new Socket(successorInfo.ip, successorInfo.port);
             }
 
-            toSuccessor = new ObjectOutputStream(socket.getOutputStream());
-            toSuccessor.writeObject(toSend);
+            if (socket != null)
+            {
+                toNeighbor = new ObjectOutputStream(socket.getOutputStream());
+                toNeighbor.writeObject(toSend);
+            }
         }
         catch (IOException e)
         {
-            Logger.getLogger(Sender.class.getName()).log(Level.SEVERE, null, e);
-            System.err.println("Failed to send message:\n" + e);
+            Logger.getLogger(Receiver.class.getName()).log(Level.SEVERE, null, e);
+            System.err.println("Error sending message: IOException " + e);
             System.exit(1);
         }
     }
