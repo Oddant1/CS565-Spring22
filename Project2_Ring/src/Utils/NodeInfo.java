@@ -38,13 +38,6 @@ public class NodeInfo implements Serializable
         port = other.port;
     }
 
-    public synchronized void syncWrite(String newName, String newIP, int newPort)
-    {
-        name = newName;
-        ip = newIP;
-        port = newPort;
-    }
-
     public synchronized String syncReadIP()
     {
         return ip;

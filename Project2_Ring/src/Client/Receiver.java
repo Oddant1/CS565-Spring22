@@ -99,7 +99,7 @@ public class Receiver extends Thread implements MessageTypes
             case SHUTDOWN_ALL:
                 if (incomingMessage.origin.equals(successorInfo))
                 {
-                    successorInfo.syncWrite(incomingMessage.other.name, incomingMessage.other.ip, incomingMessage.other.port);
+                    successorInfo.syncWrite(incomingMessage.other);
                 }
                 else
                 {
@@ -108,7 +108,7 @@ public class Receiver extends Thread implements MessageTypes
 
                 break;
             case UPDATE:
-                successorInfo.syncWrite(incomingMessage.other.name, incomingMessage.other.ip, incomingMessage.other.port);
+                successorInfo.syncWrite(incomingMessage.other);
         }
 
         // If my successor isn't the origin of the message, and if we have a message to send, forward the message
@@ -126,8 +126,7 @@ public class Receiver extends Thread implements MessageTypes
         NodeInfo oldSuccessorInfo = new NodeInfo(successorInfo);
 
         // Update your successor to be the joining node
-        successorInfo.syncWrite(incomingMessage.origin.name, incomingMessage.origin.ip,
-                                incomingMessage.origin.port);
+        successorInfo.syncWrite(incomingMessage.origin);
 
         // Tell the joining node to update its info
         toSend = new Message(myInfo, oldSuccessorInfo, "Sending your new successor info", UPDATE);
