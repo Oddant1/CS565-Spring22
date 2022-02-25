@@ -36,19 +36,17 @@ public class Sender extends Thread implements MessageTypes
             input = scanner.nextLine();
             toSend = parse(input);
 
-            if ((toSend.type == JOIN && !inChat) || (toSend.type != JOIN && inChat))
+            // We only get a null if we started a new chat
+            if (toSend == null && !inChat)
+            {
+                System.out.println("You have started a new chat. Peers can join you at IP: " + myInfo.ip + " Port: " + myInfo.port);
+                inChat = true;
+            }
+            else if (toSend != null && ((toSend.type == JOIN && !inChat) || (toSend.type != JOIN && inChat)))
             {
                 if (toSend.type == JOIN)
                 {
-                    if (toSend.other.equals(myInfo))
-                    {
-                        System.out.println("You have started a new chat. Peers can join you at IP: " + myInfo.ip + " Port: " + myInfo.port);
-                    }
-                    else
-                    {
-                        System.out.println("Welcome to the chat " + myInfo.name + ".");
-                    }
-
+                    System.out.println("Welcome to the chat " + myInfo.name + ".");
                     inChat = true;
                 }
 
@@ -91,7 +89,7 @@ public class Sender extends Thread implements MessageTypes
         String messageType;
 
         // Message we will be sending
-        Message newMessage;
+        Message newMessage = null;
         NodeInfo target;
 
         // Handle the user input being only whitespace. If it is, we want to send that whitespace as a note
@@ -114,11 +112,6 @@ public class Sender extends Thread implements MessageTypes
                     // Temporarily set our successor to the target, it will send us new successor info
                     successorInfo.syncWrite(target);
                     newMessage = new Message(myInfo, target, myInfo.name + " has joined the chat.", JOIN);
-                }
-                else
-                {
-                    // If we are creating a new chat, we are effectively joining ourselves
-                    newMessage = new Message(myInfo, myInfo, myInfo.name + " has joined the chat.", JOIN);
                 }
             }
             case "LEAVE" -> newMessage = new Message(myInfo, successorInfo, myInfo.name + " is leaving the chat.", LEAVE);
