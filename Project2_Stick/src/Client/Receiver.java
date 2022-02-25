@@ -8,14 +8,16 @@ import java.net.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class Receiver extends Thread implements MessageTypes
+public class Receiver extends Thread implements MessageTypes, Directions
 {
     private final NodeInfo myInfo;
+    private final NodeInfo predecessorInfo;
     private final NodeInfo successorInfo;
 
-    public Receiver(NodeInfo initMyInfo, NodeInfo initSuccessorInfo)
+    public Receiver(NodeInfo initMyInfo, NodeInfo initPredecessorInfo, NodeInfo initSuccessorInfo)
     {
         myInfo = initMyInfo;
+        predecessorInfo = initPredecessorInfo;
         successorInfo = initSuccessorInfo;
     }
 

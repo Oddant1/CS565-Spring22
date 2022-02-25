@@ -43,6 +43,7 @@ public class Client
     {
         // These objects are shared with the Sender and Receiver threads
         final NodeInfo myInfo;
+        final NodeInfo predecessorInfo;
         final NodeInfo successorInfo;
 
         Scanner scanner = null;
@@ -78,11 +79,12 @@ public class Client
 
         // Create the NodeInfo for this client and point our successor at ourselves
         myInfo = new NodeInfo(name, ip, port);
+        predecessorInfo = new NodeInfo(myInfo);
         successorInfo = new NodeInfo(myInfo);
 
         // Create the sender and receiver for this client
-        mySender = new Sender(myInfo, successorInfo);
-        myReceiver = new Receiver(myInfo, successorInfo);
+        mySender = new Sender(myInfo, predecessorInfo, successorInfo);
+        myReceiver = new Receiver(myInfo, predecessorInfo, successorInfo);
     }
 
     private void run()

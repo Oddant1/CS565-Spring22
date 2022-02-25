@@ -11,16 +11,18 @@ import java.net.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class Sender extends Thread implements MessageTypes
+public class Sender extends Thread implements MessageTypes, Directions
 {
     private final NodeInfo myInfo;
+    private final NodeInfo predecessorInfo;
     private final NodeInfo successorInfo;
 
     boolean inChat = false;
 
-    public Sender(NodeInfo initMyInfo, NodeInfo initSuccessorInfo)
+    public Sender(NodeInfo initMyInfo, NodeInfo initPredecessorInfo, NodeInfo initSuccessorInfo)
     {
         myInfo = initMyInfo;
+        predecessorInfo = initPredecessorInfo;
         successorInfo = initSuccessorInfo;
     }
 
