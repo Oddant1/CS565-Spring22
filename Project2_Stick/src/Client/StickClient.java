@@ -6,17 +6,17 @@ import java.util.Scanner;
 
 import java.io.*;
 
-public class Client
+public class StickClient
 {
     private final static String DEFAULT_PROPERTIES_PATH = "properties.txt";
 
-    private final Sender mySender;
-    private final Receiver myReceiver;
+    private final StickUserListener mySender;
+    private final StickClientListener myReceiver;
 
     public static void main(String[] args)
     {
         File properties = null;
-        Client client;
+        StickClient client;
 
         // Determine where to look for our properties
         if (args.length == 0)
@@ -35,15 +35,16 @@ public class Client
         }
 
         // Create our new client and start it running
-        client = new Client(properties);
+        client = new StickClient(properties);
         client.run();
     }
 
-    private Client(File properties)
+    private StickClient(File properties)
     {
         // These objects are shared with the Sender and Receiver threads
-        final NodeInfo myInfo;
-        final NodeInfo successorInfo;
+        final StickNodeInfo myInfo;
+        final StickNodeInfo predecessorInfo;
+        final StickNodeInfo successorInfo;
 
         Scanner scanner = null;
 
@@ -77,12 +78,13 @@ public class Client
                 "the peer you are joining if trying to join an existing chat");
 
         // Create the NodeInfo for this client and point our successor at ourselves
-        myInfo = new NodeInfo(name, ip, port);
-        successorInfo = new NodeInfo(myInfo);
+        myInfo = new StickNodeInfo(name, ip, port);
+        predecessorInfo = new StickNodeInfo(myInfo);
+        successorInfo = new StickNodeInfo(myInfo);
 
         // Create the sender and receiver for this client
-        mySender = new Sender(myInfo, successorInfo);
-        myReceiver = new Receiver(myInfo, successorInfo);
+        mySender = new StickUserListener(myInfo, predecessorInfo, successorInfo);
+        myReceiver = new StickClientListener(myInfo, predecessorInfo, successorInfo);
     }
 
     private void run()

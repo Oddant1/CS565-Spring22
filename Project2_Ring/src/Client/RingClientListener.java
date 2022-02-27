@@ -8,16 +8,14 @@ import java.net.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class Receiver extends Thread implements MessageTypes, Directions
+public class RingClientListener extends Thread implements RingMessageTypes
 {
-    private final NodeInfo myInfo;
-    private final NodeInfo predecessorInfo;
-    private final NodeInfo successorInfo;
+    private final RingNodeInfo myInfo;
+    private final RingNodeInfo successorInfo;
 
-    public Receiver(NodeInfo initMyInfo, NodeInfo initPredecessorInfo, NodeInfo initSuccessorInfo)
+    public RingClientListener(RingNodeInfo initMyInfo, RingNodeInfo initSuccessorInfo)
     {
         myInfo = initMyInfo;
-        predecessorInfo = initPredecessorInfo;
         successorInfo = initSuccessorInfo;
     }
 
@@ -33,7 +31,7 @@ public class Receiver extends Thread implements MessageTypes, Directions
         }
         catch (IOException e)
         {
-            Logger.getLogger(Receiver.class.getName()).log(Level.SEVERE, null, e);
+            Logger.getLogger(RingClientListener.class.getName()).log(Level.SEVERE, null, e);
             System.err.println("Error listening on port " + myInfo.port);
             System.exit(1);
         }
@@ -47,7 +45,7 @@ public class Receiver extends Thread implements MessageTypes, Directions
             }
             catch (IOException e)
             {
-                Logger.getLogger(Receiver.class.getName()).log(Level.SEVERE, null, e);
+                Logger.getLogger(RingClientListener.class.getName()).log(Level.SEVERE, null, e);
                 System.err.println("Error receiving message from predecessor: IOException" + e);
                 System.exit(1);
             }
@@ -59,17 +57,17 @@ public class Receiver extends Thread implements MessageTypes, Directions
 
     private boolean read(Socket serverSocket) throws IOException
     {
-        Message incomingMessage = null;
+        RingMessage incomingMessage = null;
         ObjectInputStream fromOther = new ObjectInputStream(serverSocket.getInputStream());
 
         // Read the message the server sent
         try
         {
-            incomingMessage = (Message) fromOther.readObject();
+            incomingMessage = (RingMessage) fromOther.readObject();
         }
         catch (ClassNotFoundException e)
         {
-            Logger.getLogger(Receiver.class.getName()).log(Level.SEVERE, null, e);
+            Logger.getLogger(RingClientListener.class.getName()).log(Level.SEVERE, null, e);
             System.err.println("Error receiving message: ClassNotFoundException" + e);
             System.exit(1);
         }
@@ -80,12 +78,12 @@ public class Receiver extends Thread implements MessageTypes, Directions
         handle(incomingMessage);
 
         // If someone sent a shutdown all the message propagated will be of type SHUTDOWN_ALL, and we want to exit
-        return incomingMessage.type != MessageTypes.SHUTDOWN_ALL;
+        return incomingMessage.type != RingMessageTypes.SHUTDOWN_ALL;
     }
 
-    private void handle(Message incomingMessage)
+    private void handle(RingMessage incomingMessage)
     {
-        Message toSend = null;
+        RingMessage toSend = null;
 
         switch (incomingMessage.type)
         {
@@ -99,6 +97,8 @@ public class Receiver extends Thread implements MessageTypes, Directions
             case LEAVE:
             case SHUTDOWN:
             case SHUTDOWN_ALL:
+                // If we have gotten all the way around the ring then close it (superfluous for shutdown_all,
+                // I just wanted to keep the cases in order if possible, and it was easy enough to do here)
                 if (incomingMessage.origin.equals(successorInfo))
                 {
                     successorInfo.syncWrite(incomingMessage.other);
@@ -109,79 +109,46 @@ public class Receiver extends Thread implements MessageTypes, Directions
                 }
 
                 break;
-            // Ensure we don't have the same node as both predecessor and successor
-            case UPDATE_PRED:
-                if (!incomingMessage.other.equals(successorInfo))
-                {
-                    predecessorInfo.syncWrite(incomingMessage.other);
-                }
-
-                break;
-            case UPDATE_SUCC:
-                if (!incomingMessage.other.equals(predecessorInfo))
-                {
-                    successorInfo.syncWrite(incomingMessage.other);
-                }
+            case UPDATE:
+                successorInfo.syncWrite(incomingMessage.other);
         }
 
-        // Don't send the message to yourself if you are at the end of the stick in that direction
-        if (toSend != null && ((toSend.direction == SUCCESSOR && !successorInfo.equals(myInfo))
-                || (toSend.direction == PREDECESSOR && !predecessorInfo.equals(myInfo))))
+        // If my successor isn't the origin of the message, and if we have a message to send, forward the message
+        if (!successorInfo.equals(incomingMessage.origin) && toSend != null)
         {
             send(toSend);
         }
-
     }
 
     // Join is a sort of special case message that requires special handling
-    private void handleJoin(Message incomingMessage)
+    private void handleJoin(RingMessage incomingMessage)
     {
         // Create message to send to joining node
-        Message toSend;
-        NodeInfo oldSuccessorInfo = new NodeInfo(successorInfo);
-
-        // Tell our current successor to change their predecessor
-        toSend = new Message(myInfo, incomingMessage.origin, "A new node has joined, sending your new predecessor info.", UPDATE_PRED, SUCCESSOR);
-        send(toSend);
+        RingMessage toSend;
+        RingNodeInfo oldSuccessorInfo = new RingNodeInfo(successorInfo);
 
         // Update your successor to be the joining node
         successorInfo.syncWrite(incomingMessage.origin);
 
         // Tell the joining node to update its info
-        toSend = new Message(myInfo, oldSuccessorInfo, "Sending your new successor info", UPDATE_SUCC, SUCCESSOR);
+        toSend = new RingMessage(myInfo, oldSuccessorInfo, "Sending your new successor info", UPDATE);
 
         // Send updated info to the joining node
         send(toSend);
-
-
-//        send(new Message(myInfo, successorInfo, incomingMessage.note, NOTE));
+        send(new RingMessage(myInfo, successorInfo, incomingMessage.note, NOTE));
     }
 
-    private void send(Message toSend)
+    private void send(RingMessage toSend)
     {
-        Socket socket = null;
-        ObjectOutputStream toNeighbor;
-
         try
         {
-            if (toSend.direction == PREDECESSOR && !predecessorInfo.equals(myInfo))
-            {
-                socket = new Socket(predecessorInfo.ip, predecessorInfo.port);
-            }
-            else if (toSend.direction == SUCCESSOR && !successorInfo.equals(myInfo))
-            {
-                socket = new Socket(successorInfo.ip, successorInfo.port);
-            }
-
-            if (socket != null)
-            {
-                toNeighbor = new ObjectOutputStream(socket.getOutputStream());
-                toNeighbor.writeObject(toSend);
-            }
+            Socket socket = new Socket(successorInfo.syncReadIP(), successorInfo.syncReadPort());
+            ObjectOutputStream toSuccessor = new ObjectOutputStream(socket.getOutputStream());
+            toSuccessor.writeObject(toSend);
         }
         catch (IOException e)
         {
-            Logger.getLogger(Receiver.class.getName()).log(Level.SEVERE, null, e);
+            Logger.getLogger(RingClientListener.class.getName()).log(Level.SEVERE, null, e);
             System.err.println("Error sending message: IOException " + e);
             System.exit(1);
         }

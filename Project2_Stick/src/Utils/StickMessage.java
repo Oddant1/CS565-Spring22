@@ -2,15 +2,15 @@ package Utils;
 
 import java.io.Serializable;
 
-public class Message implements Serializable, MessageTypes
+public class StickMessage implements Serializable, StickMessageTypes
 {
-    public NodeInfo origin;
-    public NodeInfo other;
+    public StickNodeInfo origin;
+    public StickNodeInfo other;
     public String note;
     public int type;
     public int direction;
 
-    public Message(NodeInfo initOrigin, NodeInfo initOther, String initNote, int initType, int initDirection)
+    public StickMessage(StickNodeInfo initOrigin, StickNodeInfo initOther, String initNote, int initType, int initDirection)
     {
         origin = initOrigin;
         other = initOther;

@@ -6,17 +6,17 @@ import java.util.Scanner;
 
 import java.io.*;
 
-public class Client
+public class RingClient
 {
     private final static String DEFAULT_PROPERTIES_PATH = "properties.txt";
 
-    private final Sender mySender;
-    private final Receiver myReceiver;
+    private final RingUserListener mySender;
+    private final RingClientListener myReceiver;
 
     public static void main(String[] args)
     {
         File properties = null;
-        Client client;
+        RingClient client;
 
         // Determine where to look for our properties
         if (args.length == 0)
@@ -35,16 +35,15 @@ public class Client
         }
 
         // Create our new client and start it running
-        client = new Client(properties);
+        client = new RingClient(properties);
         client.run();
     }
 
-    private Client(File properties)
+    private RingClient(File properties)
     {
         // These objects are shared with the Sender and Receiver threads
-        final NodeInfo myInfo;
-        final NodeInfo predecessorInfo;
-        final NodeInfo successorInfo;
+        final RingNodeInfo myInfo;
+        final RingNodeInfo successorInfo;
 
         Scanner scanner = null;
 
@@ -78,13 +77,12 @@ public class Client
                 "the peer you are joining if trying to join an existing chat");
 
         // Create the NodeInfo for this client and point our successor at ourselves
-        myInfo = new NodeInfo(name, ip, port);
-        predecessorInfo = new NodeInfo(myInfo);
-        successorInfo = new NodeInfo(myInfo);
+        myInfo = new RingNodeInfo(name, ip, port);
+        successorInfo = new RingNodeInfo(myInfo);
 
         // Create the sender and receiver for this client
-        mySender = new Sender(myInfo, predecessorInfo, successorInfo);
-        myReceiver = new Receiver(myInfo, predecessorInfo, successorInfo);
+        mySender = new RingUserListener(myInfo, successorInfo);
+        myReceiver = new RingClientListener(myInfo, successorInfo);
     }
 
     private void run()

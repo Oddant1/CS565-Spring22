@@ -1,6 +1,6 @@
 package Utils;
 
-public interface Directions
+public interface StickDirections
 {
     // Both is mostly used for initializing a message before it is being sent a particular direction
     final int BOTH = -1;

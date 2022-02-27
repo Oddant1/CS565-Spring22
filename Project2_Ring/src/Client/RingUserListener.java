@@ -11,16 +11,14 @@ import java.net.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class Sender extends Thread implements MessageTypes, Directions
+public class RingUserListener extends Thread implements RingMessageTypes
 {
-    private final NodeInfo myInfo;
-    private final NodeInfo predecessorInfo;
-    private final NodeInfo successorInfo;
+    private final RingNodeInfo myInfo;
+    private final RingNodeInfo successorInfo;
 
-    public Sender(NodeInfo initMyInfo, NodeInfo initPredecessorInfo, NodeInfo initSuccessorInfo)
+    public RingUserListener(RingNodeInfo initMyInfo, RingNodeInfo initSuccessorInfo)
     {
         myInfo = initMyInfo;
-        predecessorInfo = initPredecessorInfo;
         successorInfo = initSuccessorInfo;
     }
 
@@ -31,19 +29,22 @@ public class Sender extends Thread implements MessageTypes, Directions
 
         Scanner scanner = new Scanner(System.in);
         String input;
-        Message toSend;
+        RingMessage toSend;
 
         while (isRunning)
         {
+            // Parse out a message from what they typed
             input = scanner.nextLine();
             toSend = parse(input);
 
-            // This should only happen if we just started a new chat
+            // We only get a null if we started a new chat
             if (toSend == null && !inChat)
             {
-                System.out.println("You have started a new chat. Peers can join you at IP: " + myInfo.ip + " Port: " + myInfo.port);
+                System.out.println("You have started a new chat. Peers can join you at IP: "
+                                   + myInfo.ip + " Port: " + myInfo.port);
                 inChat = true;
             }
+            // Determine if we are in/joining a chat
             else if (toSend != null && ((toSend.type == JOIN && !inChat) || (toSend.type != JOIN && inChat)))
             {
                 if (toSend.type == JOIN)
@@ -52,14 +53,11 @@ public class Sender extends Thread implements MessageTypes, Directions
                     inChat = true;
                 }
 
-                if (toSend.direction == BOTH)
+                // Don't bother sending things to ourselves if we're alone in the chat
+                if (!successorInfo.equals(myInfo))
                 {
-                    toSend.direction = PREDECESSOR;
                     send(toSend);
-                    toSend.direction = SUCCESSOR;
                 }
-
-                send(toSend);
 
                 if (toSend.type == LEAVE)
                 {
@@ -72,10 +70,12 @@ public class Sender extends Thread implements MessageTypes, Directions
                     isRunning = false;
                 }
             }
+            // Tried to send a message without being in a chat
             else if (!inChat)
             {
                 System.out.println("Please join a chat before attempting to send a message");
             }
+            // Tried to join a chat while already in a chat
             else
             {
                 System.out.println("You are already in a chat, please leave before attempting to join another");
@@ -87,15 +87,15 @@ public class Sender extends Thread implements MessageTypes, Directions
         System.exit(0);
     }
 
-    private Message parse(String input)
+    private RingMessage parse(String input)
     {
         // Split our string in case we have a join followed by args
         String[] splitInput = input.split(" ");
         String messageType;
 
         // Message we will be sending
-        Message newMessage = null;
-        NodeInfo target;
+        RingMessage newMessage = null;
+        RingNodeInfo target;
 
         // Handle the user input being only whitespace. If it is, we want to send that whitespace as a note
         if (splitInput.length > 0)
@@ -113,47 +113,49 @@ public class Sender extends Thread implements MessageTypes, Directions
             {
                 if (splitInput.length == 3)
                 {
-                    target = new NodeInfo("Target", splitInput[1], Integer.parseInt(splitInput[2]));
-                    // Set our predecessor
-                    predecessorInfo.syncWrite(target);
-                    newMessage = new Message(myInfo, target, myInfo.name + " has joined the chat.", JOIN, PREDECESSOR);
+                    target = new RingNodeInfo("Target", splitInput[1], Integer.parseInt(splitInput[2]));
+                    // Temporarily set our successor to the target, it will send us new successor info
+                    successorInfo.syncWrite(target);
+                    newMessage = new RingMessage(myInfo, target, myInfo.name + " has joined the chat.", JOIN);
                 }
             }
-//            case "LEAVE" -> newMessage = new Message(myInfo, successorInfo, myInfo.name + " is leaving the chat.", LEAVE);
-//            case "SHUTDOWN" -> newMessage = new Message(myInfo, successorInfo, myInfo.name + " is shutting down.", SHUTDOWN);
-//            case "SHUTDOWN_ALL" -> newMessage = new Message(myInfo, successorInfo, myInfo.name + " initiated shutdown all.", SHUTDOWN_ALL);
-            default -> newMessage = new Message(myInfo, successorInfo, input, NOTE, BOTH);
+            case "LEAVE" -> newMessage = new RingMessage(myInfo, successorInfo,
+                                                 myInfo.name + " is leaving the chat.", LEAVE);
+            case "SHUTDOWN" -> newMessage = new RingMessage(myInfo, successorInfo,
+                                                    myInfo.name + " is shutting down.", SHUTDOWN);
+            case "SHUTDOWN_ALL" -> newMessage = new RingMessage(myInfo, successorInfo,
+                                                        myInfo.name + " initiated shutdown all.", SHUTDOWN_ALL);
+            default -> newMessage = new RingMessage(myInfo, successorInfo, input, NOTE);
         }
 
         return newMessage;
     }
 
-    private void send(Message toSend)
+    private void send(RingMessage toSend)
     {
-        Socket socket = null;
-        ObjectOutputStream toNeighbor;
+        Socket socket;
+        ObjectOutputStream toSuccessor;
 
         try
         {
-            if (toSend.direction == PREDECESSOR && !predecessorInfo.equals(myInfo))
+            // If we are joining we are sending to the info entered by the user
+            if (toSend.type == JOIN)
             {
-                socket = new Socket(predecessorInfo.ip, predecessorInfo.port);
+                socket = new Socket(toSend.other.ip, toSend.other.port);
             }
-            else if (toSend.direction == SUCCESSOR && !successorInfo.equals(myInfo))
+            // Otherwise, send to our successor
+            else
             {
-                socket = new Socket(successorInfo.ip, successorInfo.port);
+                socket = new Socket(successorInfo.syncReadIP(), successorInfo.syncReadPort());
             }
 
-            if (socket != null)
-            {
-                toNeighbor = new ObjectOutputStream(socket.getOutputStream());
-                toNeighbor.writeObject(toSend);
-            }
+            toSuccessor = new ObjectOutputStream(socket.getOutputStream());
+            toSuccessor.writeObject(toSend);
         }
         catch (IOException e)
         {
-            Logger.getLogger(Receiver.class.getName()).log(Level.SEVERE, null, e);
-            System.err.println("Error sending message: IOException " + e);
+            Logger.getLogger(RingUserListener.class.getName()).log(Level.SEVERE, null, e);
+            System.err.println("Failed to send message:\n" + e);
             System.exit(1);
         }
     }
