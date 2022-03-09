@@ -33,6 +33,7 @@ public class StickSender implements StickDirections
             {
                 toNeighbor = new ObjectOutputStream(socket.getOutputStream());
                 toNeighbor.writeObject(toSend);
+                socket.close();
             }
         }
         catch (IOException e)

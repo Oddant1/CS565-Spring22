@@ -11,6 +11,7 @@ import java.net.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+// Listens to the user
 public class StickUserListener extends Thread implements StickMessageTypes, StickDirections
 {
     private final StickNodeInfo myInfo;

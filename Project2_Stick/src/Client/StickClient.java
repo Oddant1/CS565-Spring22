@@ -10,8 +10,8 @@ public class StickClient
 {
     private final static String DEFAULT_PROPERTIES_PATH = "properties.txt";
 
-    private final StickUserListener mySender;
-    private final StickClientListener myReceiver;
+    private final StickUserListener myUserListener;
+    private final StickClientListener myClientListener;
 
     public static void main(String[] args)
     {
@@ -77,19 +77,19 @@ public class StickClient
                 "Hello " + name + ". Please type \"JOIN\" to enter the chat. Please also type the ip and port of " +
                 "the peer you are joining if trying to join an existing chat");
 
-        // Create the NodeInfo for this client and point our successor at ourselves
+        // Create the NodeInfo for this client and point our successor and predecessor at ourselves
         myInfo = new StickNodeInfo(name, ip, port);
         predecessorInfo = new StickNodeInfo(myInfo);
         successorInfo = new StickNodeInfo(myInfo);
 
-        // Create the sender and receiver for this client
-        mySender = new StickUserListener(myInfo, predecessorInfo, successorInfo);
-        myReceiver = new StickClientListener(myInfo, predecessorInfo, successorInfo);
+        // Create the user and client listeners for this client
+        myUserListener = new StickUserListener(myInfo, predecessorInfo, successorInfo);
+        myClientListener = new StickClientListener(myInfo, predecessorInfo, successorInfo);
     }
 
     private void run()
     {
-        mySender.start();
-        myReceiver.start();
+        myUserListener.start();
+        myClientListener.start();
     }
 }

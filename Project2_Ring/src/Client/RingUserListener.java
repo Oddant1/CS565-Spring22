@@ -11,6 +11,7 @@ import java.net.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+// Listens to the user
 public class RingUserListener extends Thread implements RingMessageTypes
 {
     private final RingNodeInfo myInfo;
@@ -151,6 +152,7 @@ public class RingUserListener extends Thread implements RingMessageTypes
 
             toSuccessor = new ObjectOutputStream(socket.getOutputStream());
             toSuccessor.writeObject(toSend);
+            socket.close();
         }
         catch (IOException e)
         {

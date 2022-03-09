@@ -8,6 +8,7 @@ import java.net.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+// Listens to other clients
 public class RingClientListener extends Thread implements RingMessageTypes
 {
     private final RingNodeInfo myInfo;
@@ -145,6 +146,7 @@ public class RingClientListener extends Thread implements RingMessageTypes
             Socket socket = new Socket(successorInfo.syncReadIP(), successorInfo.syncReadPort());
             ObjectOutputStream toSuccessor = new ObjectOutputStream(socket.getOutputStream());
             toSuccessor.writeObject(toSend);
+            socket.close();
         }
         catch (IOException e)
         {

@@ -8,6 +8,7 @@ import java.net.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+// Listens to other clients
 public class StickClientListener extends Thread implements StickMessageTypes, StickDirections
 {
     private final StickNodeInfo myInfo;
@@ -28,7 +29,7 @@ public class StickClientListener extends Thread implements StickMessageTypes, St
         ServerSocket serverSocket = null;
         boolean isRunning = true;
 
-        // Open a server socket listening for messages from your predecessor
+        // Open a server socket listening for messages from your neighbors
         try
         {
             serverSocket = new ServerSocket(myInfo.port);
@@ -40,7 +41,7 @@ public class StickClientListener extends Thread implements StickMessageTypes, St
             System.exit(1);
         }
 
-        // Wait for messages from the predecessor
+        // Wait for messages from neighbors
         while (isRunning)
         {
             try
@@ -64,7 +65,7 @@ public class StickClientListener extends Thread implements StickMessageTypes, St
         StickMessage incomingMessage = null;
         ObjectInputStream fromOther = new ObjectInputStream(serverSocket.getInputStream());
 
-        // Read the message the server sent
+        // Read the message the neighbor sent
         try
         {
             incomingMessage = (StickMessage) fromOther.readObject();
@@ -107,7 +108,7 @@ public class StickClientListener extends Thread implements StickMessageTypes, St
                 {
                     predecessorInfo.syncWrite(myInfo);
                 }
-                // Ensure we don't have the same node as both predecessor and successor
+                // Ensure we don't have the same node as both predecessor and successor (unless it's ourselves)
                 else if (!successorInfo.equals(incomingMessage.other))
                 {
                     predecessorInfo.syncWrite(incomingMessage.other);
@@ -120,7 +121,7 @@ public class StickClientListener extends Thread implements StickMessageTypes, St
                 {
                     successorInfo.syncWrite(myInfo);
                 }
-                // Ensure we don't have the same node as both predecessor and successor
+                // Ensure we don't have the same node as both predecessor and successor (unless it's ourselves)
                 else if (!predecessorInfo.equals(incomingMessage.other))
                 {
                     successorInfo.syncWrite(incomingMessage.other);
