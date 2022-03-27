@@ -49,7 +49,7 @@ public class TransactionManagerWorker extends Thread implements MessageTypes
     
     public void read(int toRead)
     {
-    
+
     }
     
     public void write(int toWrite, int amount)

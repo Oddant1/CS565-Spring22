@@ -15,15 +15,29 @@ import java.util.logging.*;
  */
 public class TransactionClient 
 {
-    private final static String DEFAULT_PROPERTIES_PATH = "properties.txt";
+    private final static String DEFAULT_PROPERTIES_PATH = "client_properties.txt";
+    
+    Scanner scanner = null;
+    Random random = new Random();
+    
+    final String myIp;
+    final String serverIp;
+    final int serverPort;
+    final int numAccounts;
+    final int accountBalances;
+    final int maxTransfer;
+    final int numTransactions;
+
+    // This will be incremented for each transaction
+    int myPort;
     
     // We are going to want to receive a path to a file containing server
     // connection info, num accounts, and num transactions
     public static void main(String[] args)
     {
-        TransactionClient client = null;
+        TransactionClient client;
         File properties = null;
-
+          
         // Determine where to look for our properties
         switch (args.length)
         {
@@ -38,23 +52,13 @@ public class TransactionClient
                 System.out.println("The only command line argument should (optionally) be a path to a properties file.");
                 System.exit(1);
         }
-
-        // Create our new client and start it running
+        
         client = new TransactionClient(properties);
-        client.run();
+        client.runClient();
     }
-    
-    // Init the server and the managers
+     
     private TransactionClient(File properties)
-    {
-        final String ip;
-        
-        final int port;
-        final int numAccounts;
-        final int accountBalances;
-        
-        Scanner scanner = null;
-       
+    {     
         // Get our properties scanner
         try
         {
@@ -68,34 +72,35 @@ public class TransactionClient
         }
         
         // Get our properties
-        ip = scanner.nextLine();
-        port = Integer.parseInt(scanner.nextLine());
+        myIp = scanner.nextLine();
+        serverIp = scanner.nextLine();
+        myPort = Integer.parseInt(scanner.nextLine());
+        serverPort = Integer.parseInt(scanner.nextLine());
         numAccounts = Integer.parseInt(scanner.nextLine());
+        maxTransfer = Integer.parseInt(scanner.nextLine());
         accountBalances = Integer.parseInt(scanner.nextLine());
-               
-        // Get our socket
-        try
-        {
-            serverSocket = new ServerSocket(port);
-        }
-        catch (IOException e)
-        {
-            Logger.getLogger(TransactionServer.class.getName()).log(Level.SEVERE, null, e);
-            System.out.println("Failed to open server socket on port " + port + ".");
-            System.exit(1);
-        }
+        numTransactions = Integer.parseInt(scanner.nextLine());
     }
-        
-    // Spawn workers that handle the transactions in parallel
-    public void run()
+    
+    
+    // Create our transactions
+    private void runClient()
     {
-        
+        for (int i = 0; i < numTransactions; i++)
+        {
+            createTransaction();
+            myPort++;
+        }    
     }
     
     // Create a single transaction that has source 0 - (numAccounts - 1)
     // destination 0 - (numAccounts - 1) and amount 1 - 10
     public void createTransaction()
     {
+        final int source = random.nextInt(numAccounts);
+        final int destination = random.nextInt(numAccounts);
+        final int amount = random.nextInt(maxTransfer);
         
+        new TransactionClientWorker(source, destination, amount, serverIp, serverPort, myIp, myPort).start();
     }
 }

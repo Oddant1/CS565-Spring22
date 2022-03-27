@@ -11,6 +11,7 @@ package message;
  * 
  * @author anthony
  */
+// TODO: A lot of these may end up being unnecessary
 public interface MessageTypes 
 {
     public static final int OPEN = 0;

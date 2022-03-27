@@ -5,12 +5,12 @@
 package server.transaction;
 
 import server.account.AccountManager;
+import java.util.*;
+import java.util.logging.*;
 import server.lock.LockManager;
 
 import java.io.*;
 import java.net.*;
-import java.util.*;
-import java.util.logging.*;
 
 /**
  * Creates the transaction, lock, and account managers then pawns work off onto
@@ -20,7 +20,7 @@ import java.util.logging.*;
  */
 public class TransactionServer 
 {
-    private final static String DEFAULT_PROPERTIES_PATH = "properties.txt";
+    private final static String DEFAULT_PROPERTIES_PATH = "server_properties.txt";
 
     private final AccountManager accountManager;
     private final LockManager lockManager;
