@@ -3,7 +3,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 
-package Client;
+package client;
 
 /**
  * Handles the transactions in parallel for the client

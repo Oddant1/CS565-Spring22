@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package Server.Transaction;
+package server.transaction;
 
 /**
  * Creates new transaction workers that communicate with a given transaction on
@@ -11,12 +11,7 @@ package Server.Transaction;
  * @author anthony
  */
 public class TransactionManager 
-{
-    public TransactionManager()
-    {
-        
-    }
-    
+{    
     // Spawns a worker
     public void createTransaction()
     {

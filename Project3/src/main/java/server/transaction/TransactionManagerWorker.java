@@ -2,11 +2,10 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package Server.Transaction;
+package server.transaction;
 
-import Server.Account.Account;
-import Server.Lock.Lock;
-import Message.*;
+import message.Message;
+import message.MessageTypes;
 
 import java.util.ArrayList;
 
@@ -19,7 +18,7 @@ public class TransactionManagerWorker extends Thread implements MessageTypes
 {
     // This will likely also need a reference to the account and lock managers
     // All locks currently held by the transaction
-    public ArrayList<Lock> heldLocks;
+    public ArrayList<Integer> heldLocks;
     
     public final int tid;
     
@@ -48,12 +47,12 @@ public class TransactionManagerWorker extends Thread implements MessageTypes
         
     }
     
-    public void read(Account toRead)
+    public void read(int toRead)
     {
     
     }
     
-    public void write(Account toWrite, int amount)
+    public void write(int toWrite, int amount)
     {
         
     }

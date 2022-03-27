@@ -3,7 +3,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Interface.java to edit this template
  */
 
-package Message;
+package message;
 
 /**
  * Interface to define the different message types in the system. If a class

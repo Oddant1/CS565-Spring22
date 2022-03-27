@@ -3,7 +3,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Interface.java to edit this template
  */
 
-package Server.Lock;
+package server.lock;
 
 /**
  * Indicates the types of locks that may be held, NONE may be superfluous
