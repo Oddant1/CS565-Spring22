@@ -57,7 +57,7 @@ public class TransactionServerProxy extends Thread implements MessageTypes
     // Tell server to create new transaction
     public void openTransaction() throws AbortedException
     {
-        Message received = handleCommunication(new Message(tid, OPEN, 0, 0, myIp, myPort));
+        Message received = handleCommunication(new Message(tid, OPEN, -1, -1, myIp, myPort));
 
         tid = received.tid;
         serverIp = received.responseIp;
@@ -67,7 +67,7 @@ public class TransactionServerProxy extends Thread implements MessageTypes
     // Tell server this transaction is reading the value of a given account
     public int read(int toRead) throws AbortedException
     {
-        return handleCommunication(new Message(tid, READ, toRead, 0, myIp, myPort)).amount;       
+        return handleCommunication(new Message(tid, READ, toRead, -1, myIp, myPort)).amount;       
     }
     
     // Tell server this transaction is writing a given value to a given account
@@ -79,7 +79,7 @@ public class TransactionServerProxy extends Thread implements MessageTypes
     // Tell server this transaction is closing
     public void closeTransaction() throws AbortedException
     {
-        handleCommunication(new Message(tid, CLOSE, 0, 0, myIp, myPort));
+        handleCommunication(new Message(tid, CLOSE, -1, -1, myIp, myPort));
     }
     
     // Handle server communication in a generic way
