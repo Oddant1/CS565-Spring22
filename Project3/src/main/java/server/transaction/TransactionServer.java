@@ -4,13 +4,15 @@
  */
 package server.transaction;
 
-import server.account.AccountManager;
-import java.util.*;
-import java.util.logging.*;
+import util.*;
+import message.*;
 import server.lock.LockManager;
+import server.account.AccountManager;
 
 import java.io.*;
 import java.net.*;
+import java.util.*;
+import java.util.logging.*;
 
 /**
  * Creates the transaction, lock, and account managers then pawns work off onto
@@ -18,7 +20,7 @@ import java.net.*;
  *
  * @author anthony
  */
-public class TransactionServer 
+public class TransactionServer implements MessageTypes
 {
     private final static String DEFAULT_PROPERTIES_PATH = "server_properties.txt";
 
@@ -27,6 +29,10 @@ public class TransactionServer
     private final TransactionManager transactionManager;
     
     private ServerSocket serverSocket;
+    private final SenderReceiver senderReceiver;
+    
+    private final String ip;
+    private final int port;
     
     // We are going to want to receive a file telling us which port to open, num
     // accounts and initial balances then create all managers
@@ -58,11 +64,9 @@ public class TransactionServer
     // Init the server and the managers
     private TransactionServer(File properties)
     {
-        final String ip;
-        
-        final int port;
         final int numAccounts;
         final int accountBalances;
+        final boolean locking;
         
         Scanner scanner = null;
        
@@ -83,11 +87,15 @@ public class TransactionServer
         port = Integer.parseInt(scanner.nextLine());
         numAccounts = Integer.parseInt(scanner.nextLine());
         accountBalances = Integer.parseInt(scanner.nextLine());
+        locking = Boolean.parseBoolean(scanner.nextLine());
+        
+        scanner.close();
         
         // Get our managers
-        accountManager = new AccountManager(numAccounts, accountBalances);
         lockManager = new LockManager(numAccounts);
-        transactionManager = new TransactionManager();
+        accountManager = new AccountManager(numAccounts, accountBalances,
+                                            lockManager, locking);
+        transactionManager = new TransactionManager(accountManager, lockManager, ip);
         
         // Get our socket
         try
@@ -100,6 +108,8 @@ public class TransactionServer
             System.out.println("Failed to open server socket on port " + port + ".");
             System.exit(1);
         }
+        
+        senderReceiver = new SenderReceiver(serverSocket, ip, port);
     }
     
     // Await requests for new transactions and hand them off to the transaction
@@ -107,9 +117,27 @@ public class TransactionServer
     // recevie the requsts? Then all this class does is kickstart things
     public void run()
     {
-        while (true)
+        boolean isRunning = true;
+        Message received;
+        
+        // The server runs until it receives a SHUTDOWN from the client
+        while (isRunning)
         {
+            received = senderReceiver.receive();
             
+            switch (received.type)
+            {
+                case OPEN:
+                    transactionManager.createTransaction(received);
+                    break;
+                case SHUTDOWN:
+                    isRunning = false;
+                    break;
+                default:
+                    // Uhhhhh why are we here?
+            }
         }
+       
+        // Get and report our total account sum
     }
 }

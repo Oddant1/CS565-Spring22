@@ -4,6 +4,7 @@
  */
 package client;
 
+import util.*;
 import message.*;
 import aborted.*;
 
@@ -19,11 +20,12 @@ import java.util.logging.*;
 public class TransactionServerProxy extends Thread implements MessageTypes
 {
     private ServerSocket serverSocket;
+    private final SenderReceiver senderReceiver;
     
     // TID to be used in communication (Mostly just for reporting purposes) will
     // be inited by server response
     private int tid = -1;
-    
+        
     // These will init to the actual server then be overwritten by the info for
     // the relevant worker
     private String serverIp;
@@ -31,43 +33,52 @@ public class TransactionServerProxy extends Thread implements MessageTypes
     
     // The port will be unique to each transaction
     private final String myIp;
-    private final int myPort;
+    private int myPort = 0;
             
     public TransactionServerProxy(String initServerIp, int initServerPort,
-                                  String initMyIp, int initMyPort)
+                                  String initMyIp)
     {
         serverIp = initServerIp;
         serverPort = initServerPort;
-        
+
         myIp = initMyIp;
-        myPort = initMyPort;
         
         try
         {
-            serverSocket = new ServerSocket(myPort);
+            // Get a socket on an open port then read that port
+            serverSocket = new ServerSocket(0);
+            myPort = serverSocket.getLocalPort();
         }
         catch (IOException e)
         {
             Logger.getLogger(TransactionServerProxy.class.getName()).log(Level.SEVERE, null, e);
             System.err.println("Error creating ServerSocket on port " + myPort + ": IOException " + e);
             System.exit(1);
-        }
+        }        
+        
+        senderReceiver = new SenderReceiver(serverSocket, serverIp, serverPort);
     }
     
     // Tell server to create new transaction
     public void openTransaction() throws AbortedException
     {
-        Message received = handleCommunication(new Message(tid, OPEN, -1, -1, myIp, myPort));
+        // Get the info we need from the server
+        Message received = handleCommunication(new Message(tid, OPEN, DEFAULT, DEFAULT, myIp, myPort));
 
+        // Set our tid and the new server ip and port
         tid = received.tid;
         serverIp = received.responseIp;
         serverPort = received.responsePort;
+        
+        // Update where we are sending messages
+        senderReceiver.ip = serverIp;
+        senderReceiver.port = serverPort;
     }
         
     // Tell server this transaction is reading the value of a given account
     public int read(int toRead) throws AbortedException
     {
-        return handleCommunication(new Message(tid, READ, toRead, -1, myIp, myPort)).amount;       
+        return handleCommunication(new Message(tid, READ, toRead, DEFAULT, myIp, myPort)).amount;
     }
     
     // Tell server this transaction is writing a given value to a given account
@@ -79,7 +90,7 @@ public class TransactionServerProxy extends Thread implements MessageTypes
     // Tell server this transaction is closing
     public void closeTransaction() throws AbortedException
     {
-        handleCommunication(new Message(tid, CLOSE, -1, -1, myIp, myPort));
+        handleCommunication(new Message(tid, CLOSE, DEFAULT, DEFAULT, myIp, myPort));
     }
     
     // Handle server communication in a generic way
@@ -88,8 +99,8 @@ public class TransactionServerProxy extends Thread implements MessageTypes
         Message received;
         
         // Send our message and receive our response
-        send(toSend);
-        received = receive();
+        senderReceiver.send(toSend);
+        received = senderReceiver.receive();
         
         // Throw exception if we are aborting
         if (received.type == ABORTED)
@@ -98,58 +109,6 @@ public class TransactionServerProxy extends Thread implements MessageTypes
         }
         
         // Return received message if we are not aborting
-        return received;
-    }
-    
-    // Send our message to the server
-    public void send(Message toSend)
-    {
-        Socket socket;
-        ObjectOutputStream toServer;
-        
-        try
-        {
-            socket = new Socket(serverIp, serverPort);
-            
-            toServer = new ObjectOutputStream(socket.getOutputStream());
-            toServer.writeObject(toSend);
-            
-            socket.close();
-        }
-        catch (IOException e)
-        {
-            Logger.getLogger(TransactionServerProxy.class.getName()).log(Level.SEVERE, null, e);
-            System.err.println("Error sending message: IOException " + e);
-            System.exit(1);
-        }   
-    }
-
-    // Receive a response from the server
-    public Message receive()
-    {
-        Socket socket;
-        ObjectInputStream fromServer;
-        Message received = null;
-        
-        try
-        {
-            socket = serverSocket.accept();
-            fromServer = new ObjectInputStream(socket.getInputStream());
-            received = (Message) fromServer.readObject();
-        }
-        catch (IOException e)
-        {
-            Logger.getLogger(TransactionServerProxy.class.getName()).log(Level.SEVERE, null, e);
-            System.err.println("Error receiving message: IOException " + e);
-            System.exit(1);   
-        }
-        catch (ClassNotFoundException e)
-        {
-            Logger.getLogger(TransactionServerProxy.class.getName()).log(Level.SEVERE, null, e);
-            System.err.println("Class not found for some reason: ClassNotFoundException " + e);
-            System.exit(1); 
-        }
-        
         return received;
     }
 }

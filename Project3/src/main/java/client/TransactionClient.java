@@ -4,7 +4,10 @@
  */
 package client;
 
+import message.*;
+
 import java.io.*;
+import java.net.*;
 import java.util.*;
 import java.util.logging.*;
 
@@ -13,24 +16,24 @@ import java.util.logging.*;
  * 
  * @author anthony
  */
-public class TransactionClient 
+public class TransactionClient implements MessageTypes
 {
     private final static String DEFAULT_PROPERTIES_PATH = "client_properties.txt";
     
-    Scanner scanner = null;
-    Random random = new Random();
+    private Scanner scanner = null;
+    private Random random = new Random();
     
-    final String myIp;
-    final String serverIp;
-    final int serverPort;
-    final int numAccounts;
-    final int accountBalances;
-    final int maxTransfer;
-    final int numTransactions;
+    private final ArrayList<TransactionClientWorker> workers;
+    
+    private final String myIp;
+    
+    private final String serverIp;
+    private final int serverPort;
 
-    // This will be incremented for each transaction
-    int myPort;
-    
+    private final int numAccounts;
+    private final int maxTransfer;
+    private final int numTransactions;
+
     // We are going to want to receive a path to a file containing server
     // connection info, num accounts, and num transactions
     public static void main(String[] args)
@@ -58,7 +61,9 @@ public class TransactionClient
     }
      
     private TransactionClient(File properties)
-    {     
+    {   
+        workers = new ArrayList();
+        
         // Get our properties scanner
         try
         {
@@ -73,12 +78,12 @@ public class TransactionClient
         
         // Get our properties
         myIp = scanner.nextLine();
+
         serverIp = scanner.nextLine();
-        myPort = Integer.parseInt(scanner.nextLine());
         serverPort = Integer.parseInt(scanner.nextLine());
+        
         numAccounts = Integer.parseInt(scanner.nextLine());
         maxTransfer = Integer.parseInt(scanner.nextLine());
-        accountBalances = Integer.parseInt(scanner.nextLine());
         numTransactions = Integer.parseInt(scanner.nextLine());
     }
     
@@ -86,21 +91,62 @@ public class TransactionClient
     // Create our transactions
     private void runClient()
     {
+        Socket socket;
+        ObjectOutputStream toServer;
+        Message toSend;
+        
+        // Create all our transaction
         for (int i = 0; i < numTransactions; i++)
         {
             createTransaction();
-            myPort++;
-        }    
+        }
+
+        // Wait for all of our threads to exit
+        for (TransactionClientWorker transaction : workers)
+        {
+            try
+            {
+                transaction.join();
+            }
+            catch (InterruptedException e)
+            {
+                Logger.getLogger(TransactionClient.class.getName()).log(Level.SEVERE, null, e);
+                System.out.println("Transaction interrupted:\n" + e);
+                System.exit(1);   
+            }
+        }
+        
+        // Send a shutdown to the 
+        try
+        {
+            socket = new Socket(serverIp, serverPort);
+            toServer = new ObjectOutputStream(socket.getOutputStream());
+
+               
+            
+            socket.close();
+        }
+        catch (IOException e)
+        {
+            Logger.getLogger(TransactionServerProxy.class.getName()).log(Level.SEVERE, null, e);
+            System.err.println("Error receiving message: IOException " + e);
+            System.exit(1);   
+        }
+        
     }
     
     // Create a single transaction that has source 0 - (numAccounts - 1)
     // destination 0 - (numAccounts - 1) and amount 1 - 10
     public void createTransaction()
     {
+        final TransactionClientWorker newTransaction;
+        
         final int source = random.nextInt(numAccounts);
         final int destination = random.nextInt(numAccounts);
         final int amount = random.nextInt(maxTransfer);
-        
-        new TransactionClientWorker(source, destination, amount, serverIp, serverPort, myIp, myPort).start();
+               
+        newTransaction = new TransactionClientWorker(source, destination, amount, serverIp, serverPort, myIp);
+        workers.add(newTransaction);
+        newTransaction.start();
     }
 }

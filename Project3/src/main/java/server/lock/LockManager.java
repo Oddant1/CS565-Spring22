@@ -4,9 +4,8 @@
  */
 package server.lock;
 
-import server.transaction.TransactionManagerWorker;
-
-import java.util.Arrays;
+import aborted.*;
+import server.transaction.*;
 
 /**
  * Used to interact with locks on accounts
@@ -20,21 +19,25 @@ public class LockManager implements LockTypes
     public LockManager(int numAccounts)
     {
         locks =  new Lock[numAccounts];
-        Arrays.fill(locks, new Lock());
+        
+        for (int account = 0; account < numAccounts; account++)
+        {
+            locks[account] = new Lock(account);
+        }
     }
     
     // Acquire a lock on an account if possible
-    public void setLock(int settingTid, int beingSet, int requestedLockType)
-    {
-        locks[beingSet].acquire(settingTid, requestedLockType);
+    public void setLock(TransactionManagerWorker setting, int beingSet, int requestedLockType) throws AbortedException
+    {        
+        locks[beingSet].acquire(setting, requestedLockType);
     }
     
     // Release all locks transaction holds
-    public synchronized void unLock(TransactionManagerWorker unlocking)
+    public void unLock(TransactionManagerWorker unlocking)
     {
         for (int i = 0; i < unlocking.heldLocks.size(); i++)
         {
-            unlocking.heldLocks.get(i).release(unlocking.tid);
+            locks[unlocking.heldLocks.get(i)].release(unlocking);
         }
     }
 }

@@ -4,6 +4,10 @@
  */
 package server.account;
 
+import aborted.*;
+import server.lock.*;
+import server.transaction.*;
+
 import java.util.*;
 
 /**
@@ -12,28 +16,45 @@ import java.util.*;
  * 
  * @author anthony
  */
-public class AccountManager 
+public class AccountManager implements LockTypes
 {
     // We can make this a final array because we will have an unchanging number
     // of accounts
     private final int[] accounts;
+    private final LockManager lockManager;
+  
+    // Whether to request locks on accounts or not
+    private final boolean locking;
     
-    public AccountManager(int numAccounts, int accountBalances)
+    public AccountManager(int numAccounts, int accountBalances, 
+                          LockManager initLockManager, boolean initLocking)
     {
         accounts = new int[numAccounts];
         Arrays.fill(accounts, accountBalances);
+        
+        lockManager = initLockManager;
+        locking = initLocking;
     }
     
     // Will attempt to acquire read lock on account and return value
-    public int read(int readerTid, int account)
+    public int read(TransactionManagerWorker reader, int account) throws AbortedException
     {
-        // Skips the locking for now
+        if (locking)
+        { 
+            lockManager.setLock(reader, account, READ);
+        }
+        
         return accounts[account];
     }
     
     // Will attempt to promote to write lock on account and write value
-    public void write(int readerTid, int amount, int accountIndex)
+    public void write(TransactionManagerWorker writer, int amount, int account) throws AbortedException
     {
+        if (locking)
+        {
+            lockManager.setLock(writer, account, WRITE);
+        }
         
+        accounts[account] += amount;
     }
 }

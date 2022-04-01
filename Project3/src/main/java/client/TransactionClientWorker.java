@@ -23,15 +23,14 @@ public class TransactionClientWorker extends Thread
     // Init object and create proxy for communication
     public TransactionClientWorker(int initSource, int initDestination,
                                    int initAmount, String initServerIp, 
-                                   int initServerPort, String initMyIp,
-                                   int initMyPort)
+                                   int initServerPort, String initMyIp)
     {
         source = initSource;
         destination = initDestination;
         amount = initAmount;
         
         myProxy = new TransactionServerProxy(initServerIp, initServerPort,
-                                             initMyIp, initMyPort);
+                                             initMyIp);
     }
     
     @Override

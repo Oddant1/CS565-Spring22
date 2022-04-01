@@ -14,17 +14,21 @@ package message;
 // TODO: A lot of these may end up being unnecessary
 public interface MessageTypes 
 {
+    // When a message field isn't needed
+    public static final int DEFAULT = -1;
+    
     public static final int OPEN = 0;
-    public static final int CLOSE = 1;
-    public static final int ABORT = 3;
-    
+    public static final int OPENED = 1;
+        
     public static final int READ = 3;
-    public static final int WRITE = 4;
-    
     public static final int READ_RESPONSE = 5;
     
-    public static final int COMMITTED = 6;
-    public static final int ABORTED = 7;
+    public static final int WRITE = 4;
+    public static final int WRITE_RESPONSE = 6;
+
+    public static final int CLOSE = 7;
+    public static final int COMMITTED = 8;
+    public static final int ABORTED = 9;
     
-    public static final int SHUTDOWN = 8;
+    public static final int SHUTDOWN = 10;
 }

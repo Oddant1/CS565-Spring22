@@ -4,6 +4,10 @@
  */
 package server.transaction;
 
+import message.*;
+import server.lock.*;
+import server.account.*;
+
 /**
  * Creates new transaction workers that communicate with a given transaction on
  * the client
@@ -11,10 +15,31 @@ package server.transaction;
  * @author anthony
  */
 public class TransactionManager 
-{    
-    // Spawns a worker
-    public void createTransaction()
+{       
+    private final AccountManager accountManager;
+    private final LockManager lockManager;
+    
+    private final String myIp;
+    private int tid = 0;
+
+    public TransactionManager(AccountManager initAccountManager,
+                              LockManager initLockManager,
+                              String initMyIp)
     {
+        accountManager = initAccountManager;
+        lockManager = initLockManager;
         
+        myIp = initMyIp;
+    }
+    
+    // Spawns a worker
+    public void createTransaction(Message newTransactionRequest)
+    {   
+        final String clientIp = newTransactionRequest.responseIp;
+        final int clientPort = newTransactionRequest.responsePort;
+        
+        new TransactionManagerWorker(tid, myIp, clientIp, clientPort,
+                                     accountManager, lockManager).start();
+        tid++;
     }
 }
