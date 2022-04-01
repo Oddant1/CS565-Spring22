@@ -43,11 +43,15 @@ public class TransactionManagerWorker extends Thread implements MessageTypes
     private final String clientIp;
     private final int clientPort;
     
+    private final ArrayList<int[]> writes;
+    
     public TransactionManagerWorker(int initTid, String initMyIp,
                                     String initClientIp, int initClientPort,
                                     AccountManager initAccountManager,
                                     LockManager initLockManager)
     {
+        writes = new ArrayList();
+        
         tid = initTid;
         
         myIp = initMyIp;
@@ -78,8 +82,6 @@ public class TransactionManagerWorker extends Thread implements MessageTypes
     @Override
     public void run()
     {
-        Socket socket;
-        ObjectInputStream fromClient;
         Message received = null;
         Message toSend = null;
         
@@ -146,18 +148,40 @@ public class TransactionManagerWorker extends Thread implements MessageTypes
     public Message write(Message received) throws AbortedException
     {
         // Account to write to
-        int toWrite = received.account;
+        int account = received.account;
         // Amount to write
         int amount = received.amount;
         
-        accountManager.write(this, toWrite, amount);
+        // Holds information for write to be commited first account then amount 
+        int write[] = new int[2];
         
-        return new Message(tid, WRITE_RESPONSE, toWrite, amount, myIp, myPort);
+        // Obtain permission to write to account
+        accountManager.write(this, account, amount);
+        
+        // Create our write
+        write[0] = account;
+        write[1] = amount;
+        
+        // Store our write
+        writes.add(write);
+        
+        return new Message(tid, WRITE_RESPONSE, account, amount, myIp, myPort);
     }
     
     public Message close()
     {
+        int account;
+        int amount;
         
+        lockManager.unLock(this);
+        
+        for (int[] write : writes)
+        {
+            account = write[0];
+            amount = write[1];
+            
+            accountManager.commitWrite(account, amount);
+        }
         
         return new Message(tid, COMMITTED, DEFAULT, DEFAULT, myIp, myPort);
     }

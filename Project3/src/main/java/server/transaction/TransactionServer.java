@@ -120,6 +120,8 @@ public class TransactionServer implements MessageTypes
         boolean isRunning = true;
         Message received;
         
+        System.out.println("HERE");
+        
         // The server runs until it receives a SHUTDOWN from the client
         while (isRunning)
         {
@@ -139,5 +141,6 @@ public class TransactionServer implements MessageTypes
         }
        
         // Get and report our total account sum
+        System.out.println(accountManager.sumAccounts());
     }
 }

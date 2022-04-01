@@ -47,14 +47,32 @@ public class AccountManager implements LockTypes
         return accounts[account];
     }
     
-    // Will attempt to promote to write lock on account and write value
+    // Will attempt to promote to write lock on account. Value is not written
+    // until we commit
     public void write(TransactionManagerWorker writer, int amount, int account) throws AbortedException
     {
         if (locking)
         {
             lockManager.setLock(writer, account, WRITE);
+        }        
+    }
+    
+    // Commit a write when a transaction is committing
+    public void commitWrite(int account, int amount)
+    {
+        accounts[account] += amount;
+    }
+    
+    // Sum the account balances before we close
+    public int sumAccounts()
+    {
+        int sum = 0;
+        
+        for (int account : accounts)
+        {
+            sum += account;
         }
         
-        accounts[account] += amount;
+        return sum;
     }
 }

@@ -4,6 +4,7 @@
  */
 package client;
 
+import util.*;
 import message.*;
 
 import java.io.*;
@@ -91,9 +92,8 @@ public class TransactionClient implements MessageTypes
     // Create our transactions
     private void runClient()
     {
-        Socket socket;
-        ObjectOutputStream toServer;
-        Message toSend;
+        SenderReceiver senderReceiver = new SenderReceiver(null, serverIp, serverPort);
+        Message toSend = new Message(DEFAULT, SHUTDOWN, DEFAULT, DEFAULT, "DEFAULT", DEFAULT);
         
         // Create all our transaction
         for (int i = 0; i < numTransactions; i++)
@@ -116,23 +116,8 @@ public class TransactionClient implements MessageTypes
             }
         }
         
-        // Send a shutdown to the 
-        try
-        {
-            socket = new Socket(serverIp, serverPort);
-            toServer = new ObjectOutputStream(socket.getOutputStream());
-
-               
-            
-            socket.close();
-        }
-        catch (IOException e)
-        {
-            Logger.getLogger(TransactionServerProxy.class.getName()).log(Level.SEVERE, null, e);
-            System.err.println("Error receiving message: IOException " + e);
-            System.exit(1);   
-        }
-        
+        // Send a shutdown to the server
+        senderReceiver.send(toSend);
     }
     
     // Create a single transaction that has source 0 - (numAccounts - 1)
