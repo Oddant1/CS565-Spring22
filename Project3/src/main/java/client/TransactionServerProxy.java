@@ -17,9 +17,9 @@ import java.util.logging.*;
  * 
  * @author anthony
  */
-public class TransactionServerProxy extends Thread implements MessageTypes
+public class TransactionServerProxy implements MessageTypes
 {
-    private ServerSocket serverSocket;
+    protected ServerSocket serverSocket;
     private final SenderReceiver senderReceiver;
     
     // TID to be used in communication (Mostly just for reporting purposes) will
@@ -28,12 +28,16 @@ public class TransactionServerProxy extends Thread implements MessageTypes
         
     // These will init to the actual server then be overwritten by the info for
     // the relevant worker
-    private String serverIp;
-    private int serverPort;
+    private final String serverIp;
+    private final int serverPort;
+    
+    // These are the Ip and port of the worker we are using on the server
+    private String workerIp;
+    private int workerPort;
     
     // The port will be unique to each transaction
     private final String myIp;
-    private int myPort = 0;
+    protected int myPort = 0;
             
     public TransactionServerProxy(String initServerIp, int initServerPort,
                                   String initMyIp)
@@ -67,12 +71,14 @@ public class TransactionServerProxy extends Thread implements MessageTypes
 
         // Set our tid and the new server ip and port
         tid = received.tid;
-        serverIp = received.responseIp;
-        serverPort = received.responsePort;
+        workerIp = received.responseIp;
+        workerPort = received.responsePort;
         
         // Update where we are sending messages
-        senderReceiver.ip = serverIp;
-        senderReceiver.port = serverPort;
+        senderReceiver.ip = workerIp;
+        senderReceiver.port = workerPort;
+        
+        System.out.println("OPENED: " + tid);
     }
         
     // Tell server this transaction is reading the value of a given account
@@ -110,5 +116,13 @@ public class TransactionServerProxy extends Thread implements MessageTypes
         
         // Return received message if we are not aborting
         return received;
+    }
+    
+    // If we were aborted, we use this to reset our info so we submit a new 
+    // OPEN request to the server
+    public void resetRemoteInfo()
+    {
+        senderReceiver.ip = serverIp;
+        senderReceiver.port = serverPort;
     }
 }

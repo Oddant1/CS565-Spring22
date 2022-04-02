@@ -21,47 +21,37 @@ public class Lock implements LockTypes
     
     // Contains TIDs of lock holders. Maybe this should be the 
     // TransactionWorkerManagers themselves?
-    private final ArrayList<TransactionManagerWorker> lockHolders;
-    
-    // TIDs of transactions waiting for lock
-    private final ArrayList<TransactionManagerWorker> waiting;
-    
+    protected final ArrayList<TransactionManagerWorker> lockHolders;
+        
     // Indicates lock type, NONE if no one is locking READ if one or more are
     // reading WRITE if one is writing
-    private int lockType;
+    protected int lockType;
     
     public Lock(int initAccount)       
     {
         account = initAccount;
         
         lockHolders = new ArrayList();
-        waiting = new ArrayList();
         lockType = NONE;
     }
     
     // Acquire a lock on an account
     public synchronized void acquire(TransactionManagerWorker acquiring, int requestedLockType) throws AbortedException
     {
-        // Check if we can acquire the lock we want
-        while (isConflict(acquiring, requestedLockType))
+        // Check if we can acquire the lock we want, if a deadlock is forming
+        // we throw an AbortedException
+        while (deadlockForming(acquiring) || isConflict(acquiring, requestedLockType))
         {
             try
-            {
-                // Will thro an AbortedException if it finds a deadloock forming
-                deadlockForming(acquiring);
-                
-                // Wait if we can't acquire the lock yet due to conflicts
-                waiting.add(acquiring);
+            {    
                 // Set that this transaction is now waiting on a lock for this
                 // lock's account
-                acquiring.waiting = account;
-                                
+                acquiring.waiting = account;   
                 wait();
             }
             catch (InterruptedException e)
             {
                 // We want the interrupt to end up happening
-                waiting.remove(acquiring);
             }
         }
 
@@ -102,22 +92,23 @@ public class Lock implements LockTypes
     // read locks
     public boolean isConflict(TransactionManagerWorker acquiring, int requestedLockType)
     {
-        return !(lockHolders.isEmpty() || 
-                 (lockHolders.contains(acquiring) && lockHolders.size() == 1) || 
-                 (lockType == READ && requestedLockType == READ));
+        return (lockType == WRITE) || (requestedLockType == WRITE && lockType != NONE && !(lockHolders.size() == 1 && lockHolders.contains(acquiring)));
     }
     
     // If the acquring transaction was told to wait, but it there is a holder of
     // this lock that is waiting on a lock the acquring transaction holds, the
     // acquiring transaction should abort to prevent deadlock
-    public void deadlockForming(TransactionManagerWorker acquiring) throws AbortedException
+    public boolean deadlockForming(TransactionManagerWorker acquiring) throws AbortedException
     {
         for (TransactionManagerWorker holder : lockHolders)
         {
-            if (acquiring.heldLocks.contains(holder.waiting))
+            if (acquiring.heldLocks.contains(holder.waiting) && acquiring != holder)
             {
+                System.out.println("DEADLOCK Transaction " + acquiring.tid + " aborted");
                 throw new AbortedException("Transaction " + acquiring.tid + " aborted");
             }
-        }        
+        }    
+        
+        return false;
     }
 }

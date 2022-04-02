@@ -6,6 +6,9 @@ package client;
 
 import aborted.*;
 
+import java.io.*;
+import java.util.logging.*;
+
 /**
  * Handles the transactions in parallel for the client
  * 
@@ -48,6 +51,7 @@ public class TransactionClientWorker extends Thread
             catch (AbortedException e)
             {
                 // TODO: Some kinda report about aborting here
+                myProxy.resetRemoteInfo();
             }
         }
     }
@@ -64,16 +68,33 @@ public class TransactionClientWorker extends Thread
         
         // read source
         sourceAmount = myProxy.read(source);
+        System.out.println("READ SOURCE: " + source + " " + sourceAmount);
         // write source - amount
         myProxy.write(source, sourceAmount - amount);
+        System.out.println("WRITE SOURCE: " + source + " " + (sourceAmount - amount));
         
         // read destination
         destinationAmount = myProxy.read(destination);
+        System.out.println("READ DESTINATION: " + destination + " " + destinationAmount);
         // write desination + amount
         myProxy.write(destination, destinationAmount + amount);
+        System.out.println("WRITE DESTINATION: " + destination + " " + (destinationAmount + amount));
         
         // close transaction
         myProxy.closeTransaction();
+        
+        // Need to close this or we have a potential port leak
+        // We need to do it here so we know we have committed our transaction
+        try
+        {
+            myProxy.serverSocket.close();
+        }
+        catch (IOException e)
+        {
+            Logger.getLogger(TransactionClientWorker.class.getName()).log(Level.SEVERE, null, e);
+            System.out.println("Failed to close server socket on port: " + myProxy.myPort + ".");
+            System.exit(1);
+        } 
         
         return true;
     }

@@ -49,7 +49,7 @@ public class AccountManager implements LockTypes
     
     // Will attempt to promote to write lock on account. Value is not written
     // until we commit
-    public void write(TransactionManagerWorker writer, int amount, int account) throws AbortedException
+    public void write(TransactionManagerWorker writer, int account, int amount) throws AbortedException
     {
         if (locking)
         {
@@ -60,7 +60,7 @@ public class AccountManager implements LockTypes
     // Commit a write when a transaction is committing
     public void commitWrite(int account, int amount)
     {
-        accounts[account] += amount;
+        accounts[account] = amount;
     }
     
     // Sum the account balances before we close

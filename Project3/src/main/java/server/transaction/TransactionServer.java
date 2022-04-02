@@ -117,6 +117,8 @@ public class TransactionServer implements MessageTypes
     // recevie the requsts? Then all this class does is kickstart things
     public void run()
     {
+        System.out.println(accountManager.sumAccounts());
+
         boolean isRunning = true;
         Message received;
         

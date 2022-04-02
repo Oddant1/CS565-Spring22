@@ -28,8 +28,13 @@ public class LockManager implements LockTypes
     
     // Acquire a lock on an account if possible
     public void setLock(TransactionManagerWorker setting, int beingSet, int requestedLockType) throws AbortedException
-    {        
-        locks[beingSet].acquire(setting, requestedLockType);
+    {   
+        Lock requestedLock = locks[beingSet];
+        
+        if (!(requestedLock.lockHolders.contains(setting) && requestedLockType <= requestedLock.lockType))
+        {
+            locks[beingSet].acquire(setting, requestedLockType);
+        }
     }
     
     // Release all locks transaction holds

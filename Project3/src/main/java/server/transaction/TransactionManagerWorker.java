@@ -32,8 +32,7 @@ public class TransactionManagerWorker extends Thread implements MessageTypes
     // All locks currently held by the transaction
     public ArrayList<Integer> heldLocks;
     // We can only be waiting on one lock at a time. This needs to be public w
-    public int waiting;
-    
+    public int waiting = -1;
     
     public final int tid;
     
@@ -43,14 +42,15 @@ public class TransactionManagerWorker extends Thread implements MessageTypes
     private final String clientIp;
     private final int clientPort;
     
-    private final ArrayList<int[]> writes;
+    private final HashMap<Integer, Integer> writes;
     
     public TransactionManagerWorker(int initTid, String initMyIp,
                                     String initClientIp, int initClientPort,
                                     AccountManager initAccountManager,
                                     LockManager initLockManager)
     {
-        writes = new ArrayList();
+        heldLocks = new ArrayList();
+        writes = new HashMap();
         
         tid = initTid;
         
@@ -82,13 +82,18 @@ public class TransactionManagerWorker extends Thread implements MessageTypes
     @Override
     public void run()
     {
+        boolean isRunning = true;
+        
         Message received = null;
         Message toSend = null;
         
+        // Tell our client that we are open
+        senderReceiver.send(new Message(tid, OPENED, DEFAULT, DEFAULT, myIp, myPort));
+        
         // TODO: Change this condition
-        while (true)
+        while (isRunning)
         {
-            senderReceiver.receive();
+            received = senderReceiver.receive();
             
             try
             {
@@ -98,8 +103,29 @@ public class TransactionManagerWorker extends Thread implements MessageTypes
             {
                 toSend = new Message(tid, ABORTED, DEFAULT, DEFAULT, myIp, myPort);
             }
+                   
             senderReceiver.send(toSend);
+            
+            // If we were aborted or we finished then exit
+            if (toSend.type == ABORTED || toSend.type == COMMITTED)
+            {
+                isRunning = false;
+            }
         }
+        
+        lockManager.unLock(this);
+        
+        // Need to close this or we have a potential port leak
+        try
+        {
+            serverSocket.close();
+        }
+        catch (IOException e)
+        {
+            Logger.getLogger(TransactionManagerWorker.class.getName()).log(Level.SEVERE, null, e);
+            System.out.println("Failed to close server socket on port: " + myPort + ".");
+            System.exit(1);
+        } 
     }
     
     // Parse received message and dispatch as necessary
@@ -109,10 +135,8 @@ public class TransactionManagerWorker extends Thread implements MessageTypes
         
         switch (received.type)
         {
-            case OPEN:
-                toSend = open(received);
-                break;
             case CLOSE:
+                toSend = close();
                 break;
             case READ:
                 toSend = read(received);
@@ -126,23 +150,28 @@ public class TransactionManagerWorker extends Thread implements MessageTypes
         
         return toSend;
     }
-        
-    public Message open(Message received)
-    {
-        return new Message(tid, OPENED, DEFAULT, DEFAULT, myIp, myPort);
-    }
     
     public Message read(Message received) throws AbortedException
     {        
-        int toRead = received.account;
-        // Read the value of the account (requires a read lock if we are using
-        // locking)
-        int amountRead = accountManager.read(this, toRead);
+        int account = received.account;
+        int amount;
         
+        if (writes.containsKey(account))
+        {
+            amount = writes.get(account);
+        }
+        else
+        {
+            amount = accountManager.read(this, account);
+        }
+            
         // If we got here we have a read lock
-        heldLocks.add(toRead);
+        if (!heldLocks.contains(account))
+        {
+            heldLocks.add(account);
+        }
         
-        return new Message(tid, READ_RESPONSE, toRead, amountRead, myIp, myPort);
+        return new Message(tid, READ_RESPONSE, account, amount, myIp, myPort);
     }
     
     public Message write(Message received) throws AbortedException
@@ -152,37 +181,28 @@ public class TransactionManagerWorker extends Thread implements MessageTypes
         // Amount to write
         int amount = received.amount;
         
-        // Holds information for write to be commited first account then amount 
-        int write[] = new int[2];
-        
         // Obtain permission to write to account
         accountManager.write(this, account, amount);
         
-        // Create our write
-        write[0] = account;
-        write[1] = amount;
+        // If we got here we have a write lock
+        if (!heldLocks.contains(account))
+        {
+            heldLocks.add(account);
+        }
         
-        // Store our write
-        writes.add(write);
+        writes.put(account, amount);
         
         return new Message(tid, WRITE_RESPONSE, account, amount, myIp, myPort);
     }
     
     public Message close()
-    {
-        int account;
-        int amount;
-        
-        lockManager.unLock(this);
-        
-        for (int[] write : writes)
-        {
-            account = write[0];
-            amount = write[1];
-            
-            accountManager.commitWrite(account, amount);
+    {              
+        for (int account : writes.keySet())
+        {            
+            accountManager.commitWrite(account, writes.get(account));
         }
         
+        System.out.println("COMMITTED Transaction " + tid + " completed");
         return new Message(tid, COMMITTED, DEFAULT, DEFAULT, myIp, myPort);
     }
 }
