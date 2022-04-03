@@ -93,14 +93,20 @@ public class TransactionServer implements MessageTypes
         
         // Get our managers
         lockManager = new LockManager(numAccounts);
+        System.out.println("LockManager created");
+        
         accountManager = new AccountManager(numAccounts, accountBalances,
                                             lockManager, locking);
+        System.out.println("AccountManager created");
+        
         transactionManager = new TransactionManager(accountManager, lockManager, ip);
+        System.out.println("TransactionManager created");
         
         // Get our socket
         try
         {
             serverSocket = new ServerSocket(port);
+            System.out.println("ServerSocket created");
         }
         catch (IOException e)
         {
@@ -109,20 +115,19 @@ public class TransactionServer implements MessageTypes
             System.exit(1);
         }
         
+        // Create our io manager
         senderReceiver = new SenderReceiver(serverSocket, ip, port);
     }
     
     // Await requests for new transactions and hand them off to the transaction
-    // mananger. Maybe we eliminate this and just have the transaction manager
-    // recevie the requsts? Then all this class does is kickstart things
+    // mananger. Also handles shutdown request
     public void run()
     {
-        System.out.println(accountManager.sumAccounts());
-
         boolean isRunning = true;
         Message received;
         
-        System.out.println("HERE");
+        System.out.println("\n======================================= PRE BRANCH TOTAL =======================================\n"
+                + "---> " + accountManager.sumAccounts());
         
         // The server runs until it receives a SHUTDOWN from the client
         while (isRunning)
@@ -138,11 +143,34 @@ public class TransactionServer implements MessageTypes
                     isRunning = false;
                     break;
                 default:
-                    // Uhhhhh why are we here?
+                    System.out.println("Received invalid message type for server: " + received.type);
+                    System.exit(1);
             }
         }
-       
-        // Get and report our total account sum
-        System.out.println(accountManager.sumAccounts());
+        
+        System.out.println("\n======================================= BEGIN COMMITTED TRANSACTIONS INFORMATION =======================================\n");
+        
+        for (String committed : transactionManager.committedLog)
+        {
+            System.out.println(committed);
+        }
+        
+        System.out.println("======================================= END COMMITTED TRANSACTIONS INFORMATION =======================================\n"
+                         + "\n======================================= BEGIN ABORTED TRANSACTIONS INFORMATION =======================================\n");
+        
+        for (String aborted : transactionManager.abortedLog)
+        {
+            System.out.println(aborted);
+        }
+        
+        System.out.println("======================================= END ABORTED TRANSACTIONS INFORMATION =======================================\n"
+                         + "\n======================================= END BRANCH TOTAL =======================================\n"
+                         + "---> " + accountManager.sumAccounts() + "\n"
+                         + "======================================= ACCOUNT BALANCES =======================================");
+        
+        for (int accountBalance : accountManager.accounts)
+        {
+            System.out.print(accountBalance + " ");
+        }
     }
 }

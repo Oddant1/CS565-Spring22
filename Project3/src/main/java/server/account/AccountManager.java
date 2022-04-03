@@ -20,7 +20,7 @@ public class AccountManager implements LockTypes
 {
     // We can make this a final array because we will have an unchanging number
     // of accounts
-    private final int[] accounts;
+    public final int[] accounts;
     private final LockManager lockManager;
   
     // Whether to request locks on accounts or not
@@ -40,7 +40,7 @@ public class AccountManager implements LockTypes
     public int read(TransactionManagerWorker reader, int account) throws AbortedException
     {
         if (locking)
-        { 
+        {
             lockManager.setLock(reader, account, READ);
         }
         
@@ -58,8 +58,9 @@ public class AccountManager implements LockTypes
     }
     
     // Commit a write when a transaction is committing
-    public void commitWrite(int account, int amount)
+    public synchronized void commitWrite(TransactionManagerWorker writer, int account, int amount)
     {
+        writer.appendLog("Writing amount $" + amount + " to account #" + account);
         accounts[account] = amount;
     }
     

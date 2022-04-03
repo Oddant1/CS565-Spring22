@@ -50,15 +50,19 @@ public class TransactionClientWorker extends Thread
             }
             catch (AbortedException e)
             {
-                // TODO: Some kinda report about aborting here
+                System.out.println(e.getMessage());
                 myProxy.resetRemoteInfo();
             }
         }
+        
+        System.out.println("Transaction #" + myProxy.tid + " COMMITTED");
     }
     
     // Execute the commands of this transaction
     public boolean executeTransaction() throws AbortedException
     {
+        String outBuffer;
+        
         int sourceAmount;
         int destinationAmount;
         
@@ -66,19 +70,30 @@ public class TransactionClientWorker extends Thread
         // open transaction
         myProxy.openTransaction();
         
+        // If this is the first time opening the transaction
+        if (myProxy.oldTid == -1)
+        {
+            outBuffer = "Transaction #" + myProxy.tid + " started";
+        }
+        // If we are reopening the transaction
+        else
+        {
+            outBuffer = 
+                    "                Prior transaction #" + myProxy.oldTid + 
+                    " restarted as transaction #" + myProxy.tid;
+        }
+        
+        System.out.println(outBuffer + ", transfer $" + amount + ": " + source + "->" + destination);
+        
         // read source
         sourceAmount = myProxy.read(source);
-        System.out.println("READ SOURCE: " + source + " " + sourceAmount);
         // write source - amount
         myProxy.write(source, sourceAmount - amount);
-        System.out.println("WRITE SOURCE: " + source + " " + (sourceAmount - amount));
         
         // read destination
         destinationAmount = myProxy.read(destination);
-        System.out.println("READ DESTINATION: " + destination + " " + destinationAmount);
         // write desination + amount
         myProxy.write(destination, destinationAmount + amount);
-        System.out.println("WRITE DESTINATION: " + destination + " " + (destinationAmount + amount));
         
         // close transaction
         myProxy.closeTransaction();

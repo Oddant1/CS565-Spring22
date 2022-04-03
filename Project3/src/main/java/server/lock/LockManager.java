@@ -16,6 +16,7 @@ public class LockManager implements LockTypes
 {
     private final Lock[] locks;
     
+    // Create locks on all accounts with type set to NONE
     public LockManager(int numAccounts)
     {
         locks =  new Lock[numAccounts];
@@ -27,13 +28,27 @@ public class LockManager implements LockTypes
     }
     
     // Acquire a lock on an account if possible
-    public void setLock(TransactionManagerWorker setting, int beingSet, int requestedLockType) throws AbortedException
+    public void setLock(TransactionManagerWorker setting, int lockIndex, int requestedLockType) throws AbortedException
     {   
-        Lock requestedLock = locks[beingSet];
+        Lock requestedLock = locks[lockIndex];
         
         if (!(requestedLock.lockHolders.contains(setting) && requestedLockType <= requestedLock.lockType))
         {
-            locks[beingSet].acquire(setting, requestedLockType);
+            setting.appendLog("Trying to set " + requestedLock.stringFromType(requestedLockType) + " on account #" + lockIndex);
+            
+            // Request a lock
+            requestedLock.acquire(setting, requestedLockType);
+            
+            // If we got the lock and were not already holding a lock on this account
+            // Add the lock to our held locks
+            if (!setting.heldLocks.contains(requestedLock))
+            {
+                setting.heldLocks.add(requestedLock);
+            }
+        }
+        else
+        {
+            setting.appendLog("Transaction #" + setting.tid + " already has necessary lock on account #" + lockIndex);
         }
     }
     
@@ -42,7 +57,7 @@ public class LockManager implements LockTypes
     {
         for (int i = 0; i < unlocking.heldLocks.size(); i++)
         {
-            locks[unlocking.heldLocks.get(i)].release(unlocking);
+            unlocking.heldLocks.get(i).release(unlocking);
         }
     }
 }

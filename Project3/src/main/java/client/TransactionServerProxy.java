@@ -24,7 +24,8 @@ public class TransactionServerProxy implements MessageTypes
     
     // TID to be used in communication (Mostly just for reporting purposes) will
     // be inited by server response
-    private int tid = -1;
+    protected int oldTid = -1;
+    protected int tid = -1;
         
     // These will init to the actual server then be overwritten by the info for
     // the relevant worker
@@ -66,6 +67,8 @@ public class TransactionServerProxy implements MessageTypes
     // Tell server to create new transaction
     public void openTransaction() throws AbortedException
     {
+        oldTid = tid;
+        
         // Get the info we need from the server
         Message received = handleCommunication(new Message(tid, OPEN, DEFAULT, DEFAULT, myIp, myPort));
 
@@ -77,8 +80,6 @@ public class TransactionServerProxy implements MessageTypes
         // Update where we are sending messages
         senderReceiver.ip = workerIp;
         senderReceiver.port = workerPort;
-        
-        System.out.println("OPENED: " + tid);
     }
         
     // Tell server this transaction is reading the value of a given account
@@ -111,7 +112,8 @@ public class TransactionServerProxy implements MessageTypes
         // Throw exception if we are aborting
         if (received.type == ABORTED)
         {
-            throw new AbortedException("Transaction aborted: " + tid);
+            // Spaces for indentation
+            throw new AbortedException("        Transaction " + "#" + tid + " ABORTED due to deadlock");
         }
         
         // Return received message if we are not aborting

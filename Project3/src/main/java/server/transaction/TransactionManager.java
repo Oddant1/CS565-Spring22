@@ -8,6 +8,8 @@ import message.*;
 import server.lock.*;
 import server.account.*;
 
+import java.util.*;
+
 /**
  * Creates new transaction workers that communicate with a given transaction on
  * the client
@@ -15,7 +17,15 @@ import server.account.*;
  * @author anthony
  */
 public class TransactionManager 
-{       
+{
+    // Contain logs of committed and aborted transactions respectively
+    public ArrayList<String> committedLog;
+    public ArrayList<String> abortedLog;
+    
+    // Monotonically increases as transactions access it to number their print
+    // Gives a strict ordering to the output lines
+    public int count = 0;
+    
     private final AccountManager accountManager;
     private final LockManager lockManager;
     
@@ -26,6 +36,9 @@ public class TransactionManager
                               LockManager initLockManager,
                               String initMyIp)
     {
+        committedLog = new ArrayList();
+        abortedLog = new ArrayList();
+        
         accountManager = initAccountManager;
         lockManager = initLockManager;
         
@@ -39,7 +52,26 @@ public class TransactionManager
         final int clientPort = newTransactionRequest.responsePort;
         
         new TransactionManagerWorker(tid, myIp, clientIp, clientPort,
-                                     accountManager, lockManager).start();
+                                     accountManager, lockManager, this).start();
         tid++;
+    }
+    
+    public synchronized void addCommitted(String log)
+    {
+        committedLog.add(log);
+    }
+    
+    public synchronized void addAborted(String log)
+    {
+        abortedLog.add(log);
+    }
+    
+    public synchronized int getCount()
+    {
+        int currentCount = count;
+        
+        count++;
+        
+        return currentCount;
     }
 }

@@ -22,17 +22,21 @@ import java.util.logging.*;
  */
 public class TransactionManagerWorker extends Thread implements MessageTypes
 {
+    // Log of all actions related to this transaction
+    private String log = "";
+    
     private final AccountManager accountManager;
     private final LockManager lockManager;
+    private final TransactionManager transactionManager;
     
     private ServerSocket serverSocket;
     private final SenderReceiver senderReceiver;
     
     // This will likely also need a reference to the account and lock managers
     // All locks currently held by the transaction
-    public ArrayList<Integer> heldLocks;
+    public ArrayList<Lock> heldLocks;
     // We can only be waiting on one lock at a time. This needs to be public w
-    public int waiting = -1;
+    public Lock waiting;
     
     public final int tid;
     
@@ -47,7 +51,8 @@ public class TransactionManagerWorker extends Thread implements MessageTypes
     public TransactionManagerWorker(int initTid, String initMyIp,
                                     String initClientIp, int initClientPort,
                                     AccountManager initAccountManager,
-                                    LockManager initLockManager)
+                                    LockManager initLockManager,
+                                    TransactionManager initTransactionManager)
     {
         heldLocks = new ArrayList();
         writes = new HashMap();
@@ -61,6 +66,7 @@ public class TransactionManagerWorker extends Thread implements MessageTypes
         
         accountManager = initAccountManager;
         lockManager = initLockManager;
+        transactionManager = initTransactionManager;
         
         try
         {
@@ -89,8 +95,8 @@ public class TransactionManagerWorker extends Thread implements MessageTypes
         
         // Tell our client that we are open
         senderReceiver.send(new Message(tid, OPENED, DEFAULT, DEFAULT, myIp, myPort));
-        
-        // TODO: Change this condition
+        appendLog("OPEN TRANSACTION #" + tid);
+
         while (isRunning)
         {
             received = senderReceiver.receive();
@@ -113,6 +119,7 @@ public class TransactionManagerWorker extends Thread implements MessageTypes
             }
         }
         
+        // Need to remove our locks
         lockManager.unLock(this);
         
         // Need to close this or we have a potential port leak
@@ -125,7 +132,19 @@ public class TransactionManagerWorker extends Thread implements MessageTypes
             Logger.getLogger(TransactionManagerWorker.class.getName()).log(Level.SEVERE, null, e);
             System.out.println("Failed to close server socket on port: " + myPort + ".");
             System.exit(1);
-        } 
+        }
+        
+        // Add our final bit to the log then add our log to the appropriate location
+        if (toSend.type == COMMITTED)
+        {        
+            appendLog("COMMIT_TRANSACTION #" + tid);
+            transactionManager.addCommitted(log);
+        }
+        else
+        {
+            appendLog("ABORT_TRANSACTION during " + (received.type == READ ? "READ_REQUEST" : "WRITE_REQUEST") + " due to deadlock");
+            transactionManager.addAborted(log);
+        }
     }
     
     // Parse received message and dispatch as necessary
@@ -145,7 +164,8 @@ public class TransactionManagerWorker extends Thread implements MessageTypes
                 toSend = write(received);
                 break;
             default:
-                break;
+                System.out.println("Received invalid message type for worker: " + received.type);
+                System.exit(1);
         }
         
         return toSend;
@@ -153,22 +173,25 @@ public class TransactionManagerWorker extends Thread implements MessageTypes
     
     public Message read(Message received) throws AbortedException
     {        
+        // Account to read
         int account = received.account;
+        // Amount read
         int amount;
         
+        appendLog("READ_REQUEST account #" + account);
+        
+        // If we are going to overwrite the value in the account read the value
+        // we are about to write
         if (writes.containsKey(account))
         {
             amount = writes.get(account);
+            appendLog("We have a queued write of $" + amount + " on account #" + account);
         }
+        // Otherwise we need to get a lock and read the account
         else
         {
             amount = accountManager.read(this, account);
-        }
-            
-        // If we got here we have a read lock
-        if (!heldLocks.contains(account))
-        {
-            heldLocks.add(account);
+            appendLog("Read balance $" + amount + " from account #" + account);
         }
         
         return new Message(tid, READ_RESPONSE, account, amount, myIp, myPort);
@@ -181,15 +204,12 @@ public class TransactionManagerWorker extends Thread implements MessageTypes
         // Amount to write
         int amount = received.amount;
         
+        appendLog("WRITE_REQUEST account #" + account + ", new balance $" + amount);
+        
         // Obtain permission to write to account
         accountManager.write(this, account, amount);
-        
-        // If we got here we have a write lock
-        if (!heldLocks.contains(account))
-        {
-            heldLocks.add(account);
-        }
-        
+                
+        // Add our write to be committed later if we commit
         writes.put(account, amount);
         
         return new Message(tid, WRITE_RESPONSE, account, amount, myIp, myPort);
@@ -199,10 +219,15 @@ public class TransactionManagerWorker extends Thread implements MessageTypes
     {              
         for (int account : writes.keySet())
         {            
-            accountManager.commitWrite(account, writes.get(account));
+            accountManager.commitWrite(this, account, writes.get(account));
         }
         
-        System.out.println("COMMITTED Transaction " + tid + " completed");
         return new Message(tid, COMMITTED, DEFAULT, DEFAULT, myIp, myPort);
+    }
+    
+    // Appends to the log and adds a newline and log#
+    public void appendLog(String addition)
+    {
+        log += transactionManager.getCount() + " " + addition + "\n";
     }
 }
