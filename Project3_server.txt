@@ -1,0 +1,917 @@
+cd /home/anthony/src/school/CS565-Spring22/Project3; JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64 /home/anthony/netbeans-12.6/netbeans/java/maven/bin/mvn -Dexec.vmArgs= "-Dexec.args=${exec.vmArgs} -classpath %classpath ${exec.mainClass} ${exec.appArgs}" -Dexec.appArgs= -Dexec.mainClass=server.transaction.TransactionServer -Dexec.executable=/usr/lib/jvm/java-11-openjdk-amd64/bin/java org.codehaus.mojo:exec-maven-plugin:3.0.0:exec
+Running NetBeans Compile On Save execution. Phase execution is skipped and output directories of dependency projects (with Compile on Save turned on) will be used instead of their jar artifacts.
+Scanning for projects...
+
+-----------------------< com.mycompany:Project3 >-----------------------
+Building Project3 1.0-SNAPSHOT
+--------------------------------[ jar ]---------------------------------
+
+--- exec-maven-plugin:3.0.0:exec (default-cli) @ Project3 ---
+LockManager created
+AccountManager created
+TransactionManager created
+ServerSocket created
+
+======================================= PRE BRANCH TOTAL =======================================
+---> 100
+
+======================================= BEGIN COMMITTED TRANSACTIONS INFORMATION =======================================
+
+7 OPEN TRANSACTION #7
+31 READ_REQUEST account #6
+54 Trying to set READ_LOCK on account #6
+61 Current lock NONE_LOCK on account #6, no holder, new lock READ_LOCK, no conflict
+63 Set lock READ_LOCK on account #6
+74 Read balance $10 from account #6
+136 WRITE_REQUEST account #6, new balance $6
+137 Trying to set WRITE_LOCK on account #6
+140 Current lock READ_LOCK on account #6, transaction is sole holder, new lock WRITE_LOCK, no conflict
+141 Set lock WRITE_LOCK on account #6
+148 READ_REQUEST account #0
+149 Trying to set READ_LOCK on account #0
+171 Current lock WRITE_LOCK on account #0, held by: #6, new lock READ_LOCK, conflict!
+172 Wait to set READ_LOCK on account #0
+285 Woke up, again trying to set READ_LOCK on account #0
+286 Current lock NONE_LOCK on account #0, no holder, new lock READ_LOCK, no conflict
+287 Set lock READ_LOCK on account #0
+288 Read balance $10 from account #0
+292 WRITE_REQUEST account #0, new balance $14
+294 Trying to set WRITE_LOCK on account #0
+296 Current lock READ_LOCK on account #0, transaction is sole holder, new lock WRITE_LOCK, no conflict
+297 Set lock WRITE_LOCK on account #0
+338 Writing amount $14 to account #0
+339 Writing amount $6 to account #6
+340 Release WRITE_LOCK, account #6
+341 Release WRITE_LOCK, account #0
+378 COMMIT_TRANSACTION #7
+
+8 OPEN TRANSACTION #8
+21 READ_REQUEST account #9
+51 Trying to set READ_LOCK on account #9
+81 Current lock READ_LOCK on account #9, held by: #2 #3, new lock READ_LOCK, no conflict
+82 Set lock READ_LOCK on account #9, sharing lock with: #2 #3
+83 Read balance $10 from account #9
+128 WRITE_REQUEST account #9, new balance $3
+129 Trying to set WRITE_LOCK on account #9
+130 Current lock READ_LOCK on account #9, held by: #2 #3 #8, new lock WRITE_LOCK, conflict!
+131 Wait to set WRITE_LOCK on account #9
+262 Woke up, again trying to set WRITE_LOCK on account #9
+263 Current lock READ_LOCK on account #9, held by: #3 #8, new lock WRITE_LOCK, conflict!
+264 Wait to set WRITE_LOCK on account #9
+266 Woke up, again trying to set WRITE_LOCK on account #9
+267 Current lock READ_LOCK on account #9, transaction is sole holder, new lock WRITE_LOCK, no conflict
+268 Set lock WRITE_LOCK on account #9
+320 READ_REQUEST account #8
+321 Trying to set READ_LOCK on account #8
+322 Current lock NONE_LOCK on account #8, no holder, new lock READ_LOCK, no conflict
+323 Set lock READ_LOCK on account #8
+324 Read balance $10 from account #8
+330 WRITE_REQUEST account #8, new balance $17
+331 Trying to set WRITE_LOCK on account #8
+332 Current lock READ_LOCK on account #8, transaction is sole holder, new lock WRITE_LOCK, no conflict
+333 Set lock WRITE_LOCK on account #8
+382 Writing amount $17 to account #8
+383 Writing amount $3 to account #9
+384 Release WRITE_LOCK, account #9
+385 Release WRITE_LOCK, account #8
+592 COMMIT_TRANSACTION #8
+
+18 OPEN TRANSACTION #19
+26 READ_REQUEST account #2
+58 Trying to set READ_LOCK on account #2
+87 Current lock READ_LOCK on account #2, held by: #15, new lock READ_LOCK, no conflict
+88 Set lock READ_LOCK on account #2, sharing lock with: #15
+89 Read balance $10 from account #2
+108 WRITE_REQUEST account #2, new balance $8
+109 Trying to set WRITE_LOCK on account #2
+111 Current lock READ_LOCK on account #2, held by: #15 #19, new lock WRITE_LOCK, conflict!
+119 Wait to set WRITE_LOCK on account #2
+215 Woke up, again trying to set WRITE_LOCK on account #2
+229 Current lock READ_LOCK on account #2, held by: #19 #6, new lock WRITE_LOCK, conflict!
+230 Wait to set WRITE_LOCK on account #2
+289 Woke up, again trying to set WRITE_LOCK on account #2
+290 Current lock READ_LOCK on account #2, transaction is sole holder, new lock WRITE_LOCK, no conflict
+291 Set lock WRITE_LOCK on account #2
+299 READ_REQUEST account #3
+301 Trying to set READ_LOCK on account #3
+302 Current lock WRITE_LOCK on account #3, held by: #4, new lock READ_LOCK, conflict!
+303 Wait to set READ_LOCK on account #3
+315 Woke up, again trying to set READ_LOCK on account #3
+316 Current lock NONE_LOCK on account #3, no holder, new lock READ_LOCK, no conflict
+317 Set lock READ_LOCK on account #3
+318 Read balance $10 from account #3
+325 WRITE_REQUEST account #3, new balance $12
+326 Trying to set WRITE_LOCK on account #3
+327 Current lock READ_LOCK on account #3, transaction is sole holder, new lock WRITE_LOCK, no conflict
+328 Set lock WRITE_LOCK on account #3
+394 Writing amount $8 to account #2
+395 Writing amount $12 to account #3
+396 Release WRITE_LOCK, account #2
+397 Release WRITE_LOCK, account #3
+597 COMMIT_TRANSACTION #19
+
+19 OPEN TRANSACTION #18
+28 READ_REQUEST account #7
+52 Trying to set READ_LOCK on account #7
+153 Current lock READ_LOCK on account #7, held by: #12, new lock READ_LOCK, no conflict
+154 Set lock READ_LOCK on account #7, sharing lock with: #12
+155 Read balance $10 from account #7
+163 WRITE_REQUEST account #7, new balance $6
+164 Trying to set WRITE_LOCK on account #7
+165 Current lock READ_LOCK on account #7, held by: #12 #18 #5 #13, new lock WRITE_LOCK, conflict!
+166 Wait to set WRITE_LOCK on account #7
+243 Woke up, again trying to set WRITE_LOCK on account #7
+244 Current lock READ_LOCK on account #7, held by: #12 #18 #5 #4, new lock WRITE_LOCK, conflict!
+245 Wait to set WRITE_LOCK on account #7
+247 Woke up, again trying to set WRITE_LOCK on account #7
+250 Current lock READ_LOCK on account #7, held by: #12 #18 #4, new lock WRITE_LOCK, conflict!
+251 Wait to set WRITE_LOCK on account #7
+256 Woke up, again trying to set WRITE_LOCK on account #7
+257 Current lock READ_LOCK on account #7, held by: #18 #4, new lock WRITE_LOCK, conflict!
+258 Wait to set WRITE_LOCK on account #7
+312 Woke up, again trying to set WRITE_LOCK on account #7
+313 Current lock READ_LOCK on account #7, transaction is sole holder, new lock WRITE_LOCK, no conflict
+314 Set lock WRITE_LOCK on account #7
+319 READ_REQUEST account #7
+329 We have a queued write of $6 on account #7
+334 WRITE_REQUEST account #7, new balance $10
+335 Transaction #18 already has necessary lock on account #7
+380 Writing amount $10 to account #7
+381 Release WRITE_LOCK, account #7
+601 COMMIT_TRANSACTION #18
+
+12 OPEN TRANSACTION #10
+33 READ_REQUEST account #5
+57 Trying to set READ_LOCK on account #5
+84 Current lock READ_LOCK on account #5, held by: #9 #14, new lock READ_LOCK, no conflict
+85 Set lock READ_LOCK on account #5, sharing lock with: #9 #14
+86 Read balance $10 from account #5
+103 WRITE_REQUEST account #5, new balance $8
+104 Trying to set WRITE_LOCK on account #5
+107 Current lock READ_LOCK on account #5, held by: #9 #14 #10, new lock WRITE_LOCK, conflict!
+117 Wait to set WRITE_LOCK on account #5
+211 Woke up, again trying to set WRITE_LOCK on account #5
+216 Current lock READ_LOCK on account #5, held by: #9 #10, new lock WRITE_LOCK, conflict!
+217 Wait to set WRITE_LOCK on account #5
+252 Woke up, again trying to set WRITE_LOCK on account #5
+253 Current lock READ_LOCK on account #5, held by: #9 #10, new lock WRITE_LOCK, conflict!
+254 Wait to set WRITE_LOCK on account #5
+272 Woke up, again trying to set WRITE_LOCK on account #5
+273 Current lock READ_LOCK on account #5, transaction is sole holder, new lock WRITE_LOCK, no conflict
+274 Set lock WRITE_LOCK on account #5
+276 READ_REQUEST account #3
+277 Trying to set READ_LOCK on account #3
+357 Current lock WRITE_LOCK on account #3, held by: #19, new lock READ_LOCK, conflict!
+358 Wait to set READ_LOCK on account #3
+398 Woke up, again trying to set READ_LOCK on account #3
+400 Current lock NONE_LOCK on account #3, no holder, new lock READ_LOCK, no conflict
+402 Set lock READ_LOCK on account #3
+404 Read balance $12 from account #3
+429 WRITE_REQUEST account #3, new balance $14
+430 Trying to set WRITE_LOCK on account #3
+431 Current lock READ_LOCK on account #3, transaction is sole holder, new lock WRITE_LOCK, no conflict
+432 Set lock WRITE_LOCK on account #3
+468 Writing amount $14 to account #3
+469 Writing amount $8 to account #5
+470 Release WRITE_LOCK, account #5
+471 Release WRITE_LOCK, account #3
+603 COMMIT_TRANSACTION #10
+
+561 OPEN TRANSACTION #29
+565 READ_REQUEST account #8
+566 Trying to set READ_LOCK on account #8
+567 Current lock NONE_LOCK on account #8, no holder, new lock READ_LOCK, no conflict
+568 Set lock READ_LOCK on account #8
+569 Read balance $17 from account #8
+575 WRITE_REQUEST account #8, new balance $15
+576 Trying to set WRITE_LOCK on account #8
+577 Current lock READ_LOCK on account #8, transaction is sole holder, new lock WRITE_LOCK, no conflict
+578 Set lock WRITE_LOCK on account #8
+579 READ_REQUEST account #5
+582 Trying to set READ_LOCK on account #5
+584 Current lock NONE_LOCK on account #5, no holder, new lock READ_LOCK, no conflict
+586 Set lock READ_LOCK on account #5
+587 Read balance $10 from account #5
+593 WRITE_REQUEST account #5, new balance $12
+594 Trying to set WRITE_LOCK on account #5
+595 Current lock READ_LOCK on account #5, transaction is sole holder, new lock WRITE_LOCK, no conflict
+596 Set lock WRITE_LOCK on account #5
+606 Writing amount $12 to account #5
+607 Writing amount $15 to account #8
+617 Release WRITE_LOCK, account #8
+618 Release WRITE_LOCK, account #5
+620 COMMIT_TRANSACTION #29
+
+270 OPEN TRANSACTION #21
+364 READ_REQUEST account #9
+366 Trying to set READ_LOCK on account #9
+367 Current lock WRITE_LOCK on account #9, held by: #8, new lock READ_LOCK, conflict!
+368 Wait to set READ_LOCK on account #9
+410 Woke up, again trying to set READ_LOCK on account #9
+411 Current lock READ_LOCK on account #9, held by: #16 #23, new lock READ_LOCK, no conflict
+412 Set lock READ_LOCK on account #9, sharing lock with: #16 #23
+413 Read balance $3 from account #9
+464 WRITE_REQUEST account #9, new balance $2
+465 Trying to set WRITE_LOCK on account #9
+466 Current lock READ_LOCK on account #9, transaction is sole holder, new lock WRITE_LOCK, no conflict
+467 Set lock WRITE_LOCK on account #9
+488 READ_REQUEST account #4
+489 Trying to set READ_LOCK on account #4
+490 Current lock NONE_LOCK on account #4, no holder, new lock READ_LOCK, no conflict
+491 Set lock READ_LOCK on account #4
+492 Read balance $10 from account #4
+503 WRITE_REQUEST account #4, new balance $11
+504 Trying to set WRITE_LOCK on account #4
+505 Current lock READ_LOCK on account #4, transaction is sole holder, new lock WRITE_LOCK, no conflict
+506 Set lock WRITE_LOCK on account #4
+521 Writing amount $11 to account #4
+522 Writing amount $2 to account #9
+524 Release WRITE_LOCK, account #9
+526 Release WRITE_LOCK, account #4
+624 COMMIT_TRANSACTION #21
+
+309 OPEN TRANSACTION #20
+347 READ_REQUEST account #2
+348 Trying to set READ_LOCK on account #2
+349 Current lock WRITE_LOCK on account #2, held by: #19, new lock READ_LOCK, conflict!
+350 Wait to set READ_LOCK on account #2
+399 Woke up, again trying to set READ_LOCK on account #2
+401 Current lock NONE_LOCK on account #2, no holder, new lock READ_LOCK, no conflict
+403 Set lock READ_LOCK on account #2
+405 Read balance $8 from account #2
+425 WRITE_REQUEST account #2, new balance $6
+426 Trying to set WRITE_LOCK on account #2
+427 Current lock READ_LOCK on account #2, transaction is sole holder, new lock WRITE_LOCK, no conflict
+428 Set lock WRITE_LOCK on account #2
+456 READ_REQUEST account #5
+457 Trying to set READ_LOCK on account #5
+458 Current lock WRITE_LOCK on account #5, held by: #10, new lock READ_LOCK, conflict!
+459 Wait to set READ_LOCK on account #5
+476 Woke up, again trying to set READ_LOCK on account #5
+479 Current lock READ_LOCK on account #5, held by: #24, new lock READ_LOCK, no conflict
+481 Set lock READ_LOCK on account #5, sharing lock with: #24
+483 Read balance $8 from account #5
+513 WRITE_REQUEST account #5, new balance $10
+514 Trying to set WRITE_LOCK on account #5
+515 Current lock READ_LOCK on account #5, transaction is sole holder, new lock WRITE_LOCK, no conflict
+516 Set lock WRITE_LOCK on account #5
+525 Writing amount $6 to account #2
+528 Writing amount $10 to account #5
+532 Release WRITE_LOCK, account #2
+533 Release WRITE_LOCK, account #5
+625 COMMIT_TRANSACTION #20
+
+369 OPEN TRANSACTION #25
+370 READ_REQUEST account #8
+371 Trying to set READ_LOCK on account #8
+372 Current lock WRITE_LOCK on account #8, held by: #8, new lock READ_LOCK, conflict!
+373 Wait to set READ_LOCK on account #8
+387 Woke up, again trying to set READ_LOCK on account #8
+389 Current lock NONE_LOCK on account #8, no holder, new lock READ_LOCK, no conflict
+391 Set lock READ_LOCK on account #8
+393 Read balance $17 from account #8
+460 WRITE_REQUEST account #8, new balance $12
+461 Trying to set WRITE_LOCK on account #8
+462 Current lock READ_LOCK on account #8, transaction is sole holder, new lock WRITE_LOCK, no conflict
+463 Set lock WRITE_LOCK on account #8
+517 READ_REQUEST account #8
+518 We have a queued write of $12 on account #8
+519 WRITE_REQUEST account #8, new balance $17
+520 Transaction #25 already has necessary lock on account #8
+523 Writing amount $17 to account #8
+534 Release WRITE_LOCK, account #8
+626 COMMIT_TRANSACTION #25
+
+379 OPEN TRANSACTION #26
+438 READ_REQUEST account #7
+439 Trying to set READ_LOCK on account #7
+440 Current lock NONE_LOCK on account #7, no holder, new lock READ_LOCK, no conflict
+441 Set lock READ_LOCK on account #7
+442 Read balance $10 from account #7
+452 WRITE_REQUEST account #7, new balance $9
+453 Trying to set WRITE_LOCK on account #7
+454 Current lock READ_LOCK on account #7, transaction is sole holder, new lock WRITE_LOCK, no conflict
+455 Set lock WRITE_LOCK on account #7
+477 READ_REQUEST account #9
+478 Trying to set READ_LOCK on account #9
+480 Current lock WRITE_LOCK on account #9, held by: #21, new lock READ_LOCK, conflict!
+482 Wait to set READ_LOCK on account #9
+527 Woke up, again trying to set READ_LOCK on account #9
+529 Current lock NONE_LOCK on account #9, no holder, new lock READ_LOCK, no conflict
+530 Set lock READ_LOCK on account #9
+531 Read balance $2 from account #9
+535 WRITE_REQUEST account #9, new balance $3
+536 Trying to set WRITE_LOCK on account #9
+537 Current lock READ_LOCK on account #9, transaction is sole holder, new lock WRITE_LOCK, no conflict
+538 Set lock WRITE_LOCK on account #9
+539 Writing amount $9 to account #7
+540 Writing amount $3 to account #9
+541 Release WRITE_LOCK, account #7
+542 Release WRITE_LOCK, account #9
+627 COMMIT_TRANSACTION #26
+
+414 OPEN TRANSACTION #27
+509 READ_REQUEST account #7
+510 Trying to set READ_LOCK on account #7
+511 Current lock WRITE_LOCK on account #7, held by: #26, new lock READ_LOCK, conflict!
+512 Wait to set READ_LOCK on account #7
+543 Woke up, again trying to set READ_LOCK on account #7
+544 Current lock NONE_LOCK on account #7, no holder, new lock READ_LOCK, no conflict
+545 Set lock READ_LOCK on account #7
+546 Read balance $9 from account #7
+552 WRITE_REQUEST account #7, new balance $6
+555 Trying to set WRITE_LOCK on account #7
+556 Current lock READ_LOCK on account #7, held by: #27 #28, new lock WRITE_LOCK, conflict!
+557 Wait to set WRITE_LOCK on account #7
+562 Woke up, again trying to set WRITE_LOCK on account #7
+563 Current lock READ_LOCK on account #7, transaction is sole holder, new lock WRITE_LOCK, no conflict
+564 Set lock WRITE_LOCK on account #7
+570 READ_REQUEST account #1
+571 Trying to set READ_LOCK on account #1
+572 Current lock NONE_LOCK on account #1, no holder, new lock READ_LOCK, no conflict
+573 Set lock READ_LOCK on account #1
+574 Read balance $10 from account #1
+580 WRITE_REQUEST account #1, new balance $13
+581 Trying to set WRITE_LOCK on account #1
+583 Current lock READ_LOCK on account #1, transaction is sole holder, new lock WRITE_LOCK, no conflict
+585 Set lock WRITE_LOCK on account #1
+588 Writing amount $13 to account #1
+589 Writing amount $6 to account #7
+590 Release WRITE_LOCK, account #7
+591 Release WRITE_LOCK, account #1
+629 COMMIT_TRANSACTION #27
+
+599 OPEN TRANSACTION #30
+613 READ_REQUEST account #5
+614 Trying to set READ_LOCK on account #5
+615 Current lock WRITE_LOCK on account #5, held by: #29, new lock READ_LOCK, conflict!
+616 Wait to set READ_LOCK on account #5
+619 Woke up, again trying to set READ_LOCK on account #5
+621 Current lock NONE_LOCK on account #5, no holder, new lock READ_LOCK, no conflict
+622 Set lock READ_LOCK on account #5
+623 Read balance $12 from account #5
+634 WRITE_REQUEST account #5, new balance $8
+635 Trying to set WRITE_LOCK on account #5
+636 Current lock READ_LOCK on account #5, transaction is sole holder, new lock WRITE_LOCK, no conflict
+637 Set lock WRITE_LOCK on account #5
+639 READ_REQUEST account #3
+640 Trying to set READ_LOCK on account #3
+642 Current lock NONE_LOCK on account #3, no holder, new lock READ_LOCK, no conflict
+644 Set lock READ_LOCK on account #3
+646 Read balance $14 from account #3
+648 WRITE_REQUEST account #3, new balance $18
+650 Trying to set WRITE_LOCK on account #3
+652 Current lock READ_LOCK on account #3, transaction is sole holder, new lock WRITE_LOCK, no conflict
+654 Set lock WRITE_LOCK on account #3
+657 Writing amount $18 to account #3
+659 Writing amount $8 to account #5
+660 Release WRITE_LOCK, account #5
+663 Release WRITE_LOCK, account #3
+664 COMMIT_TRANSACTION #30
+
+598 OPEN TRANSACTION #31
+608 READ_REQUEST account #0
+609 Trying to set READ_LOCK on account #0
+610 Current lock NONE_LOCK on account #0, no holder, new lock READ_LOCK, no conflict
+611 Set lock READ_LOCK on account #0
+612 Read balance $14 from account #0
+630 WRITE_REQUEST account #0, new balance $9
+631 Trying to set WRITE_LOCK on account #0
+632 Current lock READ_LOCK on account #0, transaction is sole holder, new lock WRITE_LOCK, no conflict
+633 Set lock WRITE_LOCK on account #0
+638 READ_REQUEST account #2
+641 Trying to set READ_LOCK on account #2
+643 Current lock NONE_LOCK on account #2, no holder, new lock READ_LOCK, no conflict
+645 Set lock READ_LOCK on account #2
+647 Read balance $6 from account #2
+649 WRITE_REQUEST account #2, new balance $11
+651 Trying to set WRITE_LOCK on account #2
+653 Current lock READ_LOCK on account #2, transaction is sole holder, new lock WRITE_LOCK, no conflict
+655 Set lock WRITE_LOCK on account #2
+656 Writing amount $9 to account #0
+658 Writing amount $11 to account #2
+661 Release WRITE_LOCK, account #0
+662 Release WRITE_LOCK, account #2
+665 COMMIT_TRANSACTION #31
+
+667 OPEN TRANSACTION #33
+673 READ_REQUEST account #3
+674 Trying to set READ_LOCK on account #3
+675 Current lock NONE_LOCK on account #3, no holder, new lock READ_LOCK, no conflict
+676 Set lock READ_LOCK on account #3
+677 Read balance $18 from account #3
+678 WRITE_REQUEST account #3, new balance $14
+679 Trying to set WRITE_LOCK on account #3
+680 Current lock READ_LOCK on account #3, transaction is sole holder, new lock WRITE_LOCK, no conflict
+681 Set lock WRITE_LOCK on account #3
+683 READ_REQUEST account #7
+685 Trying to set READ_LOCK on account #7
+686 Current lock NONE_LOCK on account #7, no holder, new lock READ_LOCK, no conflict
+688 Set lock READ_LOCK on account #7
+690 Read balance $6 from account #7
+691 WRITE_REQUEST account #7, new balance $10
+692 Trying to set WRITE_LOCK on account #7
+693 Current lock READ_LOCK on account #7, transaction is sole holder, new lock WRITE_LOCK, no conflict
+694 Set lock WRITE_LOCK on account #7
+700 Writing amount $14 to account #3
+701 Writing amount $10 to account #7
+706 Release WRITE_LOCK, account #3
+707 Release WRITE_LOCK, account #7
+762 COMMIT_TRANSACTION #33
+
+666 OPEN TRANSACTION #32
+668 READ_REQUEST account #1
+669 Trying to set READ_LOCK on account #1
+670 Current lock NONE_LOCK on account #1, no holder, new lock READ_LOCK, no conflict
+671 Set lock READ_LOCK on account #1
+672 Read balance $13 from account #1
+682 WRITE_REQUEST account #1, new balance $4
+684 Trying to set WRITE_LOCK on account #1
+687 Current lock READ_LOCK on account #1, transaction is sole holder, new lock WRITE_LOCK, no conflict
+689 Set lock WRITE_LOCK on account #1
+695 READ_REQUEST account #4
+696 Trying to set READ_LOCK on account #4
+697 Current lock NONE_LOCK on account #4, no holder, new lock READ_LOCK, no conflict
+698 Set lock READ_LOCK on account #4
+699 Read balance $11 from account #4
+702 WRITE_REQUEST account #4, new balance $20
+703 Trying to set WRITE_LOCK on account #4
+704 Current lock READ_LOCK on account #4, transaction is sole holder, new lock WRITE_LOCK, no conflict
+705 Set lock WRITE_LOCK on account #4
+715 Writing amount $4 to account #1
+716 Writing amount $20 to account #4
+725 Release WRITE_LOCK, account #1
+726 Release WRITE_LOCK, account #4
+770 COMMIT_TRANSACTION #32
+
+708 OPEN TRANSACTION #35
+709 READ_REQUEST account #9
+710 Trying to set READ_LOCK on account #9
+711 Current lock NONE_LOCK on account #9, no holder, new lock READ_LOCK, no conflict
+712 Set lock READ_LOCK on account #9
+713 Read balance $3 from account #9
+717 WRITE_REQUEST account #9, new balance $-5
+718 Trying to set WRITE_LOCK on account #9
+719 Current lock READ_LOCK on account #9, transaction is sole holder, new lock WRITE_LOCK, no conflict
+720 Set lock WRITE_LOCK on account #9
+721 READ_REQUEST account #4
+722 Trying to set READ_LOCK on account #4
+723 Current lock WRITE_LOCK on account #4, held by: #32, new lock READ_LOCK, conflict!
+724 Wait to set READ_LOCK on account #4
+727 Woke up, again trying to set READ_LOCK on account #4
+728 Current lock NONE_LOCK on account #4, no holder, new lock READ_LOCK, no conflict
+729 Set lock READ_LOCK on account #4
+730 Read balance $20 from account #4
+736 WRITE_REQUEST account #4, new balance $28
+737 Trying to set WRITE_LOCK on account #4
+738 Current lock READ_LOCK on account #4, transaction is sole holder, new lock WRITE_LOCK, no conflict
+739 Set lock WRITE_LOCK on account #4
+744 Writing amount $28 to account #4
+745 Writing amount $-5 to account #9
+746 Release WRITE_LOCK, account #9
+747 Release WRITE_LOCK, account #4
+796 COMMIT_TRANSACTION #35
+
+714 OPEN TRANSACTION #34
+731 READ_REQUEST account #1
+732 Trying to set READ_LOCK on account #1
+733 Current lock NONE_LOCK on account #1, no holder, new lock READ_LOCK, no conflict
+734 Set lock READ_LOCK on account #1
+735 Read balance $4 from account #1
+740 WRITE_REQUEST account #1, new balance $3
+741 Trying to set WRITE_LOCK on account #1
+742 Current lock READ_LOCK on account #1, transaction is sole holder, new lock WRITE_LOCK, no conflict
+743 Set lock WRITE_LOCK on account #1
+749 READ_REQUEST account #9
+750 Trying to set READ_LOCK on account #9
+751 Current lock NONE_LOCK on account #9, no holder, new lock READ_LOCK, no conflict
+752 Set lock READ_LOCK on account #9
+753 Read balance $-5 from account #9
+758 WRITE_REQUEST account #9, new balance $-4
+759 Trying to set WRITE_LOCK on account #9
+760 Current lock READ_LOCK on account #9, transaction is sole holder, new lock WRITE_LOCK, no conflict
+761 Set lock WRITE_LOCK on account #9
+763 Writing amount $3 to account #1
+764 Writing amount $-4 to account #9
+765 Release WRITE_LOCK, account #1
+766 Release WRITE_LOCK, account #9
+795 COMMIT_TRANSACTION #34
+
+748 OPEN TRANSACTION #36
+754 READ_REQUEST account #1
+755 Trying to set READ_LOCK on account #1
+756 Current lock WRITE_LOCK on account #1, held by: #34, new lock READ_LOCK, conflict!
+757 Wait to set READ_LOCK on account #1
+767 Woke up, again trying to set READ_LOCK on account #1
+768 Current lock NONE_LOCK on account #1, no holder, new lock READ_LOCK, no conflict
+769 Set lock READ_LOCK on account #1
+771 Read balance $3 from account #1
+772 WRITE_REQUEST account #1, new balance $3
+773 Trying to set WRITE_LOCK on account #1
+774 Current lock READ_LOCK on account #1, transaction is sole holder, new lock WRITE_LOCK, no conflict
+775 Set lock WRITE_LOCK on account #1
+776 READ_REQUEST account #5
+777 Trying to set READ_LOCK on account #5
+778 Current lock NONE_LOCK on account #5, no holder, new lock READ_LOCK, no conflict
+779 Set lock READ_LOCK on account #5
+780 Read balance $8 from account #5
+781 WRITE_REQUEST account #5, new balance $8
+782 Trying to set WRITE_LOCK on account #5
+783 Current lock READ_LOCK on account #5, transaction is sole holder, new lock WRITE_LOCK, no conflict
+784 Set lock WRITE_LOCK on account #5
+786 Writing amount $3 to account #1
+787 Writing amount $8 to account #5
+788 Release WRITE_LOCK, account #1
+789 Release WRITE_LOCK, account #5
+797 COMMIT_TRANSACTION #36
+
+798 OPEN TRANSACTION #38
+801 READ_REQUEST account #7
+802 Trying to set READ_LOCK on account #7
+803 Current lock NONE_LOCK on account #7, no holder, new lock READ_LOCK, no conflict
+804 Set lock READ_LOCK on account #7
+805 Read balance $10 from account #7
+808 WRITE_REQUEST account #7, new balance $6
+809 Trying to set WRITE_LOCK on account #7
+810 Current lock READ_LOCK on account #7, transaction is sole holder, new lock WRITE_LOCK, no conflict
+811 Set lock WRITE_LOCK on account #7
+812 READ_REQUEST account #6
+813 Trying to set READ_LOCK on account #6
+814 Current lock NONE_LOCK on account #6, no holder, new lock READ_LOCK, no conflict
+815 Set lock READ_LOCK on account #6
+816 Read balance $6 from account #6
+821 WRITE_REQUEST account #6, new balance $10
+822 Trying to set WRITE_LOCK on account #6
+823 Current lock READ_LOCK on account #6, transaction is sole holder, new lock WRITE_LOCK, no conflict
+824 Set lock WRITE_LOCK on account #6
+825 Writing amount $10 to account #6
+826 Writing amount $6 to account #7
+827 Release WRITE_LOCK, account #7
+828 Release WRITE_LOCK, account #6
+832 COMMIT_TRANSACTION #38
+
+785 OPEN TRANSACTION #37
+790 READ_REQUEST account #5
+791 Trying to set READ_LOCK on account #5
+792 Current lock NONE_LOCK on account #5, no holder, new lock READ_LOCK, no conflict
+793 Set lock READ_LOCK on account #5
+794 Read balance $8 from account #5
+799 WRITE_REQUEST account #5, new balance $5
+800 Trying to set WRITE_LOCK on account #5
+806 Current lock READ_LOCK on account #5, transaction is sole holder, new lock WRITE_LOCK, no conflict
+807 Set lock WRITE_LOCK on account #5
+817 READ_REQUEST account #7
+818 Trying to set READ_LOCK on account #7
+819 Current lock WRITE_LOCK on account #7, held by: #38, new lock READ_LOCK, conflict!
+820 Wait to set READ_LOCK on account #7
+829 Woke up, again trying to set READ_LOCK on account #7
+830 Current lock NONE_LOCK on account #7, no holder, new lock READ_LOCK, no conflict
+831 Set lock READ_LOCK on account #7
+833 Read balance $6 from account #7
+834 WRITE_REQUEST account #7, new balance $9
+835 Trying to set WRITE_LOCK on account #7
+836 Current lock READ_LOCK on account #7, transaction is sole holder, new lock WRITE_LOCK, no conflict
+837 Set lock WRITE_LOCK on account #7
+838 Writing amount $5 to account #5
+839 Writing amount $9 to account #7
+840 Release WRITE_LOCK, account #5
+841 Release WRITE_LOCK, account #7
+842 COMMIT_TRANSACTION #37
+
+======================================= END COMMITTED TRANSACTIONS INFORMATION =======================================
+
+======================================= BEGIN ABORTED TRANSACTIONS INFORMATION =======================================
+
+4 OPEN TRANSACTION #1
+30 READ_REQUEST account #1
+43 Trying to set READ_LOCK on account #1
+94 Current lock READ_LOCK on account #1, held by: #16 #17, new lock READ_LOCK, no conflict
+95 Set lock READ_LOCK on account #1, sharing lock with: #16 #17
+96 Read balance $10 from account #1
+175 WRITE_REQUEST account #1, new balance $10
+176 Trying to set WRITE_LOCK on account #1
+201 Current lock READ_LOCK on account #1, held by: #16 #17 #1, new lock WRITE_LOCK, conflict!
+202 Aborting when trying to set a WRITE_LOCK on account #1 while holding a READ_LOCK on account #1
+204 Release READ_LOCK, account #1
+227 ABORT_TRANSACTION during WRITE_REQUEST due to deadlock
+
+2 OPEN TRANSACTION #2
+25 READ_REQUEST account #9
+42 Trying to set READ_LOCK on account #9
+66 Current lock NONE_LOCK on account #9, no holder, new lock READ_LOCK, no conflict
+67 Set lock READ_LOCK on account #9
+75 Read balance $10 from account #9
+188 WRITE_REQUEST account #9, new balance $2
+190 Trying to set WRITE_LOCK on account #9
+198 Current lock READ_LOCK on account #9, held by: #2 #3 #8, new lock WRITE_LOCK, conflict!
+199 Aborting when trying to set a WRITE_LOCK on account #9 while holding a READ_LOCK on account #9
+203 Release READ_LOCK, account #9
+228 ABORT_TRANSACTION during WRITE_REQUEST due to deadlock
+
+15 OPEN TRANSACTION #15
+37 READ_REQUEST account #2
+47 Trying to set READ_LOCK on account #2
+68 Current lock NONE_LOCK on account #2, no holder, new lock READ_LOCK, no conflict
+69 Set lock READ_LOCK on account #2
+76 Read balance $10 from account #2
+124 WRITE_REQUEST account #2, new balance $8
+125 Trying to set WRITE_LOCK on account #2
+126 Current lock READ_LOCK on account #2, held by: #15 #19, new lock WRITE_LOCK, conflict!
+192 Aborting when trying to set a WRITE_LOCK on account #2 while holding a READ_LOCK on account #2
+214 Release READ_LOCK, account #2
+269 ABORT_TRANSACTION during WRITE_REQUEST due to deadlock
+
+14 OPEN TRANSACTION #14
+32 READ_REQUEST account #5
+45 Trying to set READ_LOCK on account #5
+72 Current lock READ_LOCK on account #5, held by: #9, new lock READ_LOCK, no conflict
+78 Set lock READ_LOCK on account #5, sharing lock with: #9
+80 Read balance $10 from account #5
+185 WRITE_REQUEST account #5, new balance $7
+187 Trying to set WRITE_LOCK on account #5
+205 Current lock READ_LOCK on account #5, held by: #9 #14 #10, new lock WRITE_LOCK, conflict!
+206 Aborting when trying to set a WRITE_LOCK on account #5 while holding a READ_LOCK on account #5
+210 Release READ_LOCK, account #5
+275 ABORT_TRANSACTION during WRITE_REQUEST due to deadlock
+
+10 OPEN TRANSACTION #11
+20 READ_REQUEST account #8
+48 Trying to set READ_LOCK on account #8
+98 Current lock NONE_LOCK on account #8, no holder, new lock READ_LOCK, no conflict
+99 Set lock READ_LOCK on account #8
+127 Read balance $10 from account #8
+186 WRITE_REQUEST account #8, new balance $5
+189 Trying to set WRITE_LOCK on account #8
+191 Current lock READ_LOCK on account #8, held by: #11 #0, new lock WRITE_LOCK, conflict!
+195 Aborting when trying to set a WRITE_LOCK on account #8 while holding a READ_LOCK on account #8
+218 Release READ_LOCK, account #8
+278 ABORT_TRANSACTION during WRITE_REQUEST due to deadlock
+
+3 OPEN TRANSACTION #3
+23 READ_REQUEST account #9
+50 Trying to set READ_LOCK on account #9
+73 Current lock READ_LOCK on account #9, held by: #2, new lock READ_LOCK, no conflict
+79 Set lock READ_LOCK on account #9, sharing lock with: #2
+97 Read balance $10 from account #9
+133 WRITE_REQUEST account #9, new balance $9
+134 Trying to set WRITE_LOCK on account #9
+135 Current lock READ_LOCK on account #9, held by: #2 #3 #8, new lock WRITE_LOCK, conflict!
+196 Aborting when trying to set a WRITE_LOCK on account #9 while holding a READ_LOCK on account #9
+265 Release READ_LOCK, account #9
+351 ABORT_TRANSACTION during WRITE_REQUEST due to deadlock
+
+0 OPEN TRANSACTION #5
+36 READ_REQUEST account #7
+56 Trying to set READ_LOCK on account #7
+157 Current lock READ_LOCK on account #7, held by: #12 #18, new lock READ_LOCK, no conflict
+158 Set lock READ_LOCK on account #7, sharing lock with: #12 #18
+159 Read balance $10 from account #7
+174 WRITE_REQUEST account #7, new balance $6
+177 Trying to set WRITE_LOCK on account #7
+233 Current lock READ_LOCK on account #7, held by: #12 #18 #5 #13, new lock WRITE_LOCK, conflict!
+234 Aborting when trying to set a WRITE_LOCK on account #7 while holding a READ_LOCK on account #7
+246 Release READ_LOCK, account #7
+352 ABORT_TRANSACTION during WRITE_REQUEST due to deadlock
+
+5 OPEN TRANSACTION #0
+38 READ_REQUEST account #8
+55 Trying to set READ_LOCK on account #8
+100 Current lock READ_LOCK on account #8, held by: #11, new lock READ_LOCK, no conflict
+101 Set lock READ_LOCK on account #8, sharing lock with: #11
+102 Read balance $10 from account #8
+180 WRITE_REQUEST account #8, new balance $8
+182 Trying to set WRITE_LOCK on account #8
+183 Current lock READ_LOCK on account #8, held by: #11 #0, new lock WRITE_LOCK, conflict!
+184 Wait to set WRITE_LOCK on account #8
+219 Woke up, again trying to set WRITE_LOCK on account #8
+220 Current lock READ_LOCK on account #8, transaction is sole holder, new lock WRITE_LOCK, no conflict
+221 Set lock WRITE_LOCK on account #8
+222 READ_REQUEST account #5
+223 Trying to set READ_LOCK on account #5
+224 Current lock READ_LOCK on account #5, held by: #9 #10, new lock READ_LOCK, no conflict
+225 Set lock READ_LOCK on account #5, sharing lock with: #9 #10
+226 Read balance $10 from account #5
+238 WRITE_REQUEST account #5, new balance $12
+239 Trying to set WRITE_LOCK on account #5
+240 Current lock READ_LOCK on account #5, held by: #9 #10 #0, new lock WRITE_LOCK, conflict!
+242 Aborting when trying to set a WRITE_LOCK on account #5 while holding a READ_LOCK on account #5
+248 Release WRITE_LOCK, account #8
+249 Release READ_LOCK, account #5
+353 ABORT_TRANSACTION during WRITE_REQUEST due to deadlock
+
+13 OPEN TRANSACTION #13
+39 READ_REQUEST account #7
+59 Trying to set READ_LOCK on account #7
+160 Current lock READ_LOCK on account #7, held by: #12 #18 #5, new lock READ_LOCK, no conflict
+161 Set lock READ_LOCK on account #7, sharing lock with: #12 #18 #5
+162 Read balance $10 from account #7
+179 WRITE_REQUEST account #7, new balance $9
+181 Trying to set WRITE_LOCK on account #7
+231 Current lock READ_LOCK on account #7, held by: #12 #18 #5 #13, new lock WRITE_LOCK, conflict!
+232 Aborting when trying to set a WRITE_LOCK on account #7 while holding a READ_LOCK on account #7
+241 Release READ_LOCK, account #7
+354 ABORT_TRANSACTION during WRITE_REQUEST due to deadlock
+
+11 OPEN TRANSACTION #12
+34 READ_REQUEST account #7
+46 Trying to set READ_LOCK on account #7
+150 Current lock NONE_LOCK on account #7, no holder, new lock READ_LOCK, no conflict
+151 Set lock READ_LOCK on account #7
+152 Read balance $10 from account #7
+167 WRITE_REQUEST account #7, new balance $7
+168 Trying to set WRITE_LOCK on account #7
+169 Current lock READ_LOCK on account #7, held by: #12 #18 #5 #13, new lock WRITE_LOCK, conflict!
+193 Aborting when trying to set a WRITE_LOCK on account #7 while holding a READ_LOCK on account #7
+255 Release READ_LOCK, account #7
+355 ABORT_TRANSACTION during WRITE_REQUEST due to deadlock
+
+9 OPEN TRANSACTION #9
+22 READ_REQUEST account #5
+40 Trying to set READ_LOCK on account #5
+70 Current lock NONE_LOCK on account #5, no holder, new lock READ_LOCK, no conflict
+71 Set lock READ_LOCK on account #5
+77 Read balance $10 from account #5
+112 WRITE_REQUEST account #5, new balance $6
+113 Trying to set WRITE_LOCK on account #5
+123 Current lock READ_LOCK on account #5, held by: #9 #14 #10, new lock WRITE_LOCK, conflict!
+194 Aborting when trying to set a WRITE_LOCK on account #5 while holding a READ_LOCK on account #5
+271 Release READ_LOCK, account #5
+356 ABORT_TRANSACTION during WRITE_REQUEST due to deadlock
+
+6 OPEN TRANSACTION #6
+24 READ_REQUEST account #0
+53 Trying to set READ_LOCK on account #0
+114 Current lock NONE_LOCK on account #0, no holder, new lock READ_LOCK, no conflict
+115 Set lock READ_LOCK on account #0
+116 Read balance $10 from account #0
+144 WRITE_REQUEST account #0, new balance $5
+145 Trying to set WRITE_LOCK on account #0
+146 Current lock READ_LOCK on account #0, transaction is sole holder, new lock WRITE_LOCK, no conflict
+147 Set lock WRITE_LOCK on account #0
+173 READ_REQUEST account #2
+178 Trying to set READ_LOCK on account #2
+200 Current lock READ_LOCK on account #2, held by: #15 #19, new lock READ_LOCK, no conflict
+212 Set lock READ_LOCK on account #2, sharing lock with: #15 #19
+213 Read balance $10 from account #2
+279 WRITE_REQUEST account #2, new balance $15
+280 Trying to set WRITE_LOCK on account #2
+281 Current lock READ_LOCK on account #2, held by: #19 #6, new lock WRITE_LOCK, conflict!
+282 Aborting when trying to set a WRITE_LOCK on account #2 while holding a READ_LOCK on account #2
+283 Release WRITE_LOCK, account #0
+284 Release READ_LOCK, account #2
+359 ABORT_TRANSACTION during WRITE_REQUEST due to deadlock
+
+17 OPEN TRANSACTION #17
+27 READ_REQUEST account #1
+49 Trying to set READ_LOCK on account #1
+90 Current lock READ_LOCK on account #1, held by: #16, new lock READ_LOCK, no conflict
+91 Set lock READ_LOCK on account #1, sharing lock with: #16
+92 Read balance $10 from account #1
+120 WRITE_REQUEST account #1, new balance $1
+121 Trying to set WRITE_LOCK on account #1
+122 Current lock READ_LOCK on account #1, held by: #16 #17 #1, new lock WRITE_LOCK, conflict!
+197 Aborting when trying to set a WRITE_LOCK on account #1 while holding a READ_LOCK on account #1
+293 Release READ_LOCK, account #1
+360 ABORT_TRANSACTION during WRITE_REQUEST due to deadlock
+
+1 OPEN TRANSACTION #4
+29 READ_REQUEST account #3
+44 Trying to set READ_LOCK on account #3
+64 Current lock NONE_LOCK on account #3, no holder, new lock READ_LOCK, no conflict
+65 Set lock READ_LOCK on account #3
+132 Read balance $10 from account #3
+138 WRITE_REQUEST account #3, new balance $6
+139 Trying to set WRITE_LOCK on account #3
+142 Current lock READ_LOCK on account #3, transaction is sole holder, new lock WRITE_LOCK, no conflict
+143 Set lock WRITE_LOCK on account #3
+156 READ_REQUEST account #7
+170 Trying to set READ_LOCK on account #7
+235 Current lock READ_LOCK on account #7, held by: #12 #18 #5 #13, new lock READ_LOCK, no conflict
+236 Set lock READ_LOCK on account #7, sharing lock with: #12 #18 #5 #13
+237 Read balance $10 from account #7
+259 WRITE_REQUEST account #7, new balance $14
+260 Trying to set WRITE_LOCK on account #7
+261 Current lock READ_LOCK on account #7, held by: #18 #4, new lock WRITE_LOCK, conflict!
+308 Aborting when trying to set a WRITE_LOCK on account #7 while holding a READ_LOCK on account #7
+310 Release WRITE_LOCK, account #3
+311 Release READ_LOCK, account #7
+433 ABORT_TRANSACTION during WRITE_REQUEST due to deadlock
+
+16 OPEN TRANSACTION #16
+35 READ_REQUEST account #1
+41 Trying to set READ_LOCK on account #1
+60 Current lock NONE_LOCK on account #1, no holder, new lock READ_LOCK, no conflict
+62 Set lock READ_LOCK on account #1
+93 Read balance $10 from account #1
+105 WRITE_REQUEST account #1, new balance $9
+106 Trying to set WRITE_LOCK on account #1
+110 Current lock READ_LOCK on account #1, held by: #16 #17 #1, new lock WRITE_LOCK, conflict!
+118 Wait to set WRITE_LOCK on account #1
+207 Woke up, again trying to set WRITE_LOCK on account #1
+208 Current lock READ_LOCK on account #1, held by: #16 #17, new lock WRITE_LOCK, conflict!
+209 Wait to set WRITE_LOCK on account #1
+295 Woke up, again trying to set WRITE_LOCK on account #1
+298 Current lock READ_LOCK on account #1, transaction is sole holder, new lock WRITE_LOCK, no conflict
+300 Set lock WRITE_LOCK on account #1
+304 READ_REQUEST account #9
+305 Trying to set READ_LOCK on account #9
+306 Current lock WRITE_LOCK on account #9, held by: #8, new lock READ_LOCK, conflict!
+307 Wait to set READ_LOCK on account #9
+386 Woke up, again trying to set READ_LOCK on account #9
+388 Current lock NONE_LOCK on account #9, no holder, new lock READ_LOCK, no conflict
+390 Set lock READ_LOCK on account #9
+392 Read balance $3 from account #9
+415 WRITE_REQUEST account #9, new balance $4
+416 Trying to set WRITE_LOCK on account #9
+417 Current lock READ_LOCK on account #9, held by: #16 #23 #21, new lock WRITE_LOCK, conflict!
+418 Aborting when trying to set a WRITE_LOCK on account #9 while holding a READ_LOCK on account #9
+419 Release WRITE_LOCK, account #1
+420 Release READ_LOCK, account #9
+600 ABORT_TRANSACTION during WRITE_REQUEST due to deadlock
+
+336 OPEN TRANSACTION #23
+374 READ_REQUEST account #9
+375 Trying to set READ_LOCK on account #9
+376 Current lock WRITE_LOCK on account #9, held by: #8, new lock READ_LOCK, conflict!
+377 Wait to set READ_LOCK on account #9
+406 Woke up, again trying to set READ_LOCK on account #9
+407 Current lock READ_LOCK on account #9, held by: #16, new lock READ_LOCK, no conflict
+408 Set lock READ_LOCK on account #9, sharing lock with: #16
+409 Read balance $3 from account #9
+443 WRITE_REQUEST account #9, new balance $-5
+444 Trying to set WRITE_LOCK on account #9
+445 Current lock READ_LOCK on account #9, held by: #23 #21, new lock WRITE_LOCK, conflict!
+446 Aborting when trying to set a WRITE_LOCK on account #9 while holding a READ_LOCK on account #9
+451 Release READ_LOCK, account #9
+602 ABORT_TRANSACTION during WRITE_REQUEST due to deadlock
+
+337 OPEN TRANSACTION #22
+361 READ_REQUEST account #1
+362 Trying to set READ_LOCK on account #1
+363 Current lock WRITE_LOCK on account #1, held by: #16, new lock READ_LOCK, conflict!
+365 Wait to set READ_LOCK on account #1
+421 Woke up, again trying to set READ_LOCK on account #1
+422 Current lock NONE_LOCK on account #1, no holder, new lock READ_LOCK, no conflict
+423 Set lock READ_LOCK on account #1
+424 Read balance $10 from account #1
+434 WRITE_REQUEST account #1, new balance $10
+435 Trying to set WRITE_LOCK on account #1
+436 Current lock READ_LOCK on account #1, transaction is sole holder, new lock WRITE_LOCK, no conflict
+437 Set lock WRITE_LOCK on account #1
+447 READ_REQUEST account #5
+448 Trying to set READ_LOCK on account #5
+449 Current lock WRITE_LOCK on account #5, held by: #10, new lock READ_LOCK, conflict!
+450 Wait to set READ_LOCK on account #5
+484 Woke up, again trying to set READ_LOCK on account #5
+485 Current lock READ_LOCK on account #5, held by: #24 #20, new lock READ_LOCK, no conflict
+486 Set lock READ_LOCK on account #5, sharing lock with: #24 #20
+487 Read balance $8 from account #5
+493 WRITE_REQUEST account #5, new balance $8
+494 Trying to set WRITE_LOCK on account #5
+495 Current lock READ_LOCK on account #5, held by: #24 #20 #22, new lock WRITE_LOCK, conflict!
+496 Aborting when trying to set a WRITE_LOCK on account #5 while holding a READ_LOCK on account #5
+498 Release WRITE_LOCK, account #1
+500 Release READ_LOCK, account #5
+604 ABORT_TRANSACTION during WRITE_REQUEST due to deadlock
+
+342 OPEN TRANSACTION #24
+343 READ_REQUEST account #5
+344 Trying to set READ_LOCK on account #5
+345 Current lock WRITE_LOCK on account #5, held by: #10, new lock READ_LOCK, conflict!
+346 Wait to set READ_LOCK on account #5
+472 Woke up, again trying to set READ_LOCK on account #5
+473 Current lock NONE_LOCK on account #5, no holder, new lock READ_LOCK, no conflict
+474 Set lock READ_LOCK on account #5
+475 Read balance $8 from account #5
+497 WRITE_REQUEST account #5, new balance $5
+499 Trying to set WRITE_LOCK on account #5
+501 Current lock READ_LOCK on account #5, held by: #24 #20, new lock WRITE_LOCK, conflict!
+502 Aborting when trying to set a WRITE_LOCK on account #5 while holding a READ_LOCK on account #5
+507 Release READ_LOCK, account #5
+605 ABORT_TRANSACTION during WRITE_REQUEST due to deadlock
+
+508 OPEN TRANSACTION #28
+547 READ_REQUEST account #7
+548 Trying to set READ_LOCK on account #7
+549 Current lock READ_LOCK on account #7, held by: #27, new lock READ_LOCK, no conflict
+550 Set lock READ_LOCK on account #7, sharing lock with: #27
+551 Read balance $9 from account #7
+553 WRITE_REQUEST account #7, new balance $5
+554 Trying to set WRITE_LOCK on account #7
+558 Current lock READ_LOCK on account #7, held by: #27 #28, new lock WRITE_LOCK, conflict!
+559 Aborting when trying to set a WRITE_LOCK on account #7 while holding a READ_LOCK on account #7
+560 Release READ_LOCK, account #7
+628 ABORT_TRANSACTION during WRITE_REQUEST due to deadlock
+
+======================================= END ABORTED TRANSACTIONS INFORMATION =======================================
+
+======================================= END BRANCH TOTAL =======================================
+---> 100
+======================================= ACCOUNT BALANCES =======================================
+9 3 11 14 28 5 10 9 15 -4
+------------------------------------------------------------------------
+BUILD SUCCESS
+------------------------------------------------------------------------
+Total time:  6.919 s
+Finished at: 2022-04-03T17:06:11-07:00
+------------------------------------------------------------------------

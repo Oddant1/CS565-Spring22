@@ -6,7 +6,7 @@
 package server.lock;
 
 /**
- * Indicates the types of locks that may be held, NONE may be superfluous
+ * Indicates the types of locks that may be held
  * 
  * @author anthony
  */

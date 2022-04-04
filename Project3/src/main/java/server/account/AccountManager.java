@@ -11,8 +11,8 @@ import server.transaction.*;
 import java.util.*;
 
 /**
- * Holds and manages all of the accounts. Objects interact with accounts through
- * this manager
+ * Holds and manages all of the accounts. Transactions interact with accounts 
+ * through this manager
  * 
  * @author anthony
  */
@@ -36,9 +36,11 @@ public class AccountManager implements LockTypes
         locking = initLocking;
     }
     
-    // Will attempt to acquire read lock on account and return value
-    public int read(TransactionManagerWorker reader, int account) throws AbortedException
+    // Read value of account
+    public int read(TransactionManagerWorker reader, int account)
+            throws AbortedException
     {
+        // Request read lock if applicable
         if (locking)
         {
             lockManager.setLock(reader, account, READ);
@@ -47,9 +49,9 @@ public class AccountManager implements LockTypes
         return accounts[account];
     }
     
-    // Will attempt to promote to write lock on account. Value is not written
-    // until we commit
-    public void write(TransactionManagerWorker writer, int account, int amount) throws AbortedException
+    // Requests a write lock on an account. Does nothing if we are not locking
+    public void write(TransactionManagerWorker writer, int account, int amount)
+            throws AbortedException
     {
         if (locking)
         {
@@ -58,13 +60,16 @@ public class AccountManager implements LockTypes
     }
     
     // Commit a write when a transaction is committing
-    public synchronized void commitWrite(TransactionManagerWorker writer, int account, int amount)
+    public synchronized void commitWrite(TransactionManagerWorker writer, 
+                                         int account, int amount)
     {
-        writer.appendLog("Writing amount $" + amount + " to account #" + account);
+        writer.appendLog("Writing amount $" + amount + " to account #" 
+                         + account);
+        // This is where we actually set the value a transaction is writing
         accounts[account] = amount;
     }
     
-    // Sum the account balances before we close
+    // Sum the account balances
     public int sumAccounts()
     {
         int sum = 0;

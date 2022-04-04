@@ -83,17 +83,22 @@ public class TransactionClientWorker extends Thread
                     " restarted as transaction #" + myProxy.tid;
         }
         
-        System.out.println(outBuffer + ", transfer $" + amount + ": " + source + "->" + destination);
+        System.out.println(outBuffer + ", transfer $" + amount + ": " + source
+                           + "->" + destination);
         
+        // START WITHDRAWAL
         // read source
         sourceAmount = myProxy.read(source);
         // write source - amount
         myProxy.write(source, sourceAmount - amount);
+        // END WITHDRAWAL
         
+        // START DEPOSIT
         // read destination
         destinationAmount = myProxy.read(destination);
         // write desination + amount
         myProxy.write(destination, destinationAmount + amount);
+        // END DEPOSIT
         
         // close transaction
         myProxy.closeTransaction();
@@ -106,8 +111,10 @@ public class TransactionClientWorker extends Thread
         }
         catch (IOException e)
         {
-            Logger.getLogger(TransactionClientWorker.class.getName()).log(Level.SEVERE, null, e);
-            System.out.println("Failed to close server socket on port: " + myProxy.myPort + ".");
+            Logger.getLogger(TransactionClientWorker.class.getName())
+                    .log(Level.SEVERE, null, e);
+            System.out.println("Failed to close server socket on port: " 
+                               + myProxy.myPort + ".");
             System.exit(1);
         } 
         

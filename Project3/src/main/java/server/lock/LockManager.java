@@ -28,27 +28,29 @@ public class LockManager implements LockTypes
     }
     
     // Acquire a lock on an account if possible
-    public void setLock(TransactionManagerWorker setting, int lockIndex, int requestedLockType) throws AbortedException
+    public void setLock(TransactionManagerWorker setting, int lockIndex,
+                        int requestedLockType) throws AbortedException
     {   
         Lock requestedLock = locks[lockIndex];
         
-        if (!(requestedLock.lockHolders.contains(setting) && requestedLockType <= requestedLock.lockType))
+        // Determine whether we need to obtain a lock or already have it
+        if (!(requestedLock.lockHolders.contains(setting) 
+            && requestedLockType <= requestedLock.lockType))
         {
-            setting.appendLog("Trying to set " + requestedLock.stringFromType(requestedLockType) + " on account #" + lockIndex);
+            setting.appendLog(
+                    "Trying to set " 
+                    + requestedLock.stringFromType(requestedLockType) 
+                    + " on account #" + lockIndex);
             
             // Request a lock
             requestedLock.acquire(setting, requestedLockType);
-            
-            // If we got the lock and were not already holding a lock on this account
-            // Add the lock to our held locks
-            if (!setting.heldLocks.contains(requestedLock))
-            {
-                setting.heldLocks.add(requestedLock);
-            }
         }
         else
         {
-            setting.appendLog("Transaction #" + setting.tid + " already has necessary lock on account #" + lockIndex);
+            setting.appendLog(
+                    "Transaction #" + setting.tid 
+                    + " already has necessary lock on account #" 
+                    + lockIndex);
         }
     }
     

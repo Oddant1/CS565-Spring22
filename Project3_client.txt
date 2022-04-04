@@ -1,0 +1,93 @@
+cd /home/anthony/src/school/CS565-Spring22/Project3; JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64 /home/anthony/netbeans-12.6/netbeans/java/maven/bin/mvn -Dexec.vmArgs= "-Dexec.args=${exec.vmArgs} -classpath %classpath ${exec.mainClass} ${exec.appArgs}" -Dexec.appArgs= -Dexec.mainClass=client.TransactionClient -Dexec.executable=/usr/lib/jvm/java-11-openjdk-amd64/bin/java org.codehaus.mojo:exec-maven-plugin:3.0.0:exec
+Running NetBeans Compile On Save execution. Phase execution is skipped and output directories of dependency projects (with Compile on Save turned on) will be used instead of their jar artifacts.
+Scanning for projects...
+
+-----------------------< com.mycompany:Project3 >-----------------------
+Building Project3 1.0-SNAPSHOT
+--------------------------------[ jar ]---------------------------------
+
+--- exec-maven-plugin:3.0.0:exec (default-cli) @ Project3 ---
+Transaction #1 started, transfer $0: 1->5
+Transaction #17 started, transfer $9: 1->4
+Transaction #14 started, transfer $3: 5->7
+Transaction #8 started, transfer $7: 9->8
+Transaction #4 started, transfer $4: 3->7
+Transaction #11 started, transfer $5: 8->8
+Transaction #9 started, transfer $4: 5->3
+Transaction #6 started, transfer $5: 0->2
+Transaction #18 started, transfer $4: 7->7
+Transaction #19 started, transfer $2: 2->3
+Transaction #3 started, transfer $1: 9->4
+Transaction #2 started, transfer $8: 9->4
+Transaction #7 started, transfer $4: 6->0
+Transaction #10 started, transfer $2: 5->3
+Transaction #13 started, transfer $1: 7->9
+Transaction #15 started, transfer $2: 2->5
+Transaction #0 started, transfer $2: 8->5
+Transaction #16 started, transfer $1: 1->9
+Transaction #5 started, transfer $4: 7->6
+Transaction #12 started, transfer $3: 7->1
+        Transaction #15 ABORTED due to deadlock
+        Transaction #3 ABORTED due to deadlock
+        Transaction #1 ABORTED due to deadlock
+        Transaction #2 ABORTED due to deadlock
+        Transaction #14 ABORTED due to deadlock
+        Transaction #11 ABORTED due to deadlock
+        Transaction #13 ABORTED due to deadlock
+        Transaction #12 ABORTED due to deadlock
+        Transaction #5 ABORTED due to deadlock
+        Transaction #0 ABORTED due to deadlock
+        Transaction #9 ABORTED due to deadlock
+        Transaction #6 ABORTED due to deadlock
+        Transaction #17 ABORTED due to deadlock
+        Transaction #4 ABORTED due to deadlock
+                Prior transaction #14 restarted as transaction #24, transfer $3: 5->7
+                Prior transaction #2 restarted as transaction #23, transfer $8: 9->4
+                Prior transaction #1 restarted as transaction #22, transfer $0: 1->5
+                Prior transaction #15 restarted as transaction #20, transfer $2: 2->5
+                Prior transaction #3 restarted as transaction #21, transfer $1: 9->4
+Transaction #7 COMMITTED
+                Prior transaction #11 restarted as transaction #25, transfer $5: 8->8
+                Prior transaction #13 restarted as transaction #26, transfer $1: 7->9
+Transaction #18 COMMITTED
+                Prior transaction #12 restarted as transaction #27, transfer $3: 7->1
+Transaction #8 COMMITTED
+        Transaction #16 ABORTED due to deadlock
+Transaction #19 COMMITTED
+        Transaction #23 ABORTED due to deadlock
+Transaction #10 COMMITTED
+        Transaction #22 ABORTED due to deadlock
+                Prior transaction #5 restarted as transaction #28, transfer $4: 7->6
+        Transaction #24 ABORTED due to deadlock
+Transaction #21 COMMITTED
+Transaction #20 COMMITTED
+Transaction #25 COMMITTED
+Transaction #26 COMMITTED
+                Prior transaction #0 restarted as transaction #29, transfer $2: 8->5
+        Transaction #28 ABORTED due to deadlock
+Transaction #27 COMMITTED
+                Prior transaction #9 restarted as transaction #30, transfer $4: 5->3
+                Prior transaction #6 restarted as transaction #31, transfer $5: 0->2
+Transaction #29 COMMITTED
+Transaction #31 COMMITTED
+Transaction #30 COMMITTED
+                Prior transaction #17 restarted as transaction #32, transfer $9: 1->4
+                Prior transaction #4 restarted as transaction #33, transfer $4: 3->7
+Transaction #33 COMMITTED
+                Prior transaction #23 restarted as transaction #35, transfer $8: 9->4
+                Prior transaction #16 restarted as transaction #34, transfer $1: 1->9
+Transaction #32 COMMITTED
+                Prior transaction #22 restarted as transaction #36, transfer $0: 1->5
+Transaction #35 COMMITTED
+Transaction #34 COMMITTED
+Transaction #36 COMMITTED
+                Prior transaction #24 restarted as transaction #37, transfer $3: 5->7
+                Prior transaction #28 restarted as transaction #38, transfer $4: 7->6
+Transaction #38 COMMITTED
+Transaction #37 COMMITTED
+------------------------------------------------------------------------
+BUILD SUCCESS
+------------------------------------------------------------------------
+Total time:  1.084 s
+Finished at: 2022-04-03T17:06:11-07:00
+------------------------------------------------------------------------

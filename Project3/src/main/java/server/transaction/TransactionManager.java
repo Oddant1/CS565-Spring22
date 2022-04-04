@@ -51,25 +51,28 @@ public class TransactionManager
         final String clientIp = newTransactionRequest.responseIp;
         final int clientPort = newTransactionRequest.responsePort;
         
-        new TransactionManagerWorker(tid, myIp, clientIp, clientPort,
-                                     accountManager, lockManager, this).start();
+        new TransactionManagerWorker(
+                tid, myIp, clientIp, clientPort, accountManager, lockManager, 
+                this).start();
         tid++;
     }
     
+    // Add to the logs of committed transactions
     public synchronized void addCommitted(String log)
     {
         committedLog.add(log);
     }
     
+    // Add to the logs of aborted transactions
     public synchronized void addAborted(String log)
     {
         abortedLog.add(log);
     }
     
+    // Count how many actions have been logged across all transactions
     public synchronized int getCount()
     {
         int currentCount = count;
-        
         count++;
         
         return currentCount;

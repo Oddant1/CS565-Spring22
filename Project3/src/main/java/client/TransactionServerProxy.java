@@ -27,12 +27,11 @@ public class TransactionServerProxy implements MessageTypes
     protected int oldTid = -1;
     protected int tid = -1;
         
-    // These will init to the actual server then be overwritten by the info for
-    // the relevant worker
+    // Store the server info for open requests
     private final String serverIp;
     private final int serverPort;
     
-    // These are the Ip and port of the worker we are using on the server
+    // These are the IP and port of the worker we are using on the server
     private String workerIp;
     private int workerPort;
     
@@ -56,8 +55,10 @@ public class TransactionServerProxy implements MessageTypes
         }
         catch (IOException e)
         {
-            Logger.getLogger(TransactionServerProxy.class.getName()).log(Level.SEVERE, null, e);
-            System.err.println("Error creating ServerSocket on port " + myPort + ": IOException " + e);
+            Logger.getLogger(TransactionServerProxy.class.getName())
+                    .log(Level.SEVERE, null, e);
+            System.err.println("Error creating ServerSocket on port " + myPort
+                               + ": IOException " + e);
             System.exit(1);
         }        
         
@@ -69,38 +70,44 @@ public class TransactionServerProxy implements MessageTypes
     {
         oldTid = tid;
         
-        // Get the info we need from the server
-        Message received = handleCommunication(new Message(tid, OPEN, DEFAULT, DEFAULT, myIp, myPort));
+        // Send an open request to the server and get back our tid and the ip
+        // and port of the client we're communicating with
+        Message received = handleCommunication(
+                new Message(tid, OPEN, DEFAULT, DEFAULT, myIp, myPort));
 
-        // Set our tid and the new server ip and port
+        // Set our tid and the worker ip and port
         tid = received.tid;
         workerIp = received.responseIp;
         workerPort = received.responsePort;
         
-        // Update where we are sending messages
+        // Update where we are sending messages so they go to our worker not the
+        // main server
         senderReceiver.ip = workerIp;
         senderReceiver.port = workerPort;
     }
         
-    // Tell server this transaction is reading the value of a given account
+    // Tell worker this transaction is reading the value of a given account
     public int read(int toRead) throws AbortedException
     {
-        return handleCommunication(new Message(tid, READ, toRead, DEFAULT, myIp, myPort)).amount;
+        return handleCommunication(
+                new Message(tid, READ, toRead, DEFAULT, myIp,myPort)).amount;
     }
     
-    // Tell server this transaction is writing a given value to a given account
+    // Tell worker this transaction is writing a given value to a given account
     public void write(int toWrite, int amount) throws AbortedException
     {
-        handleCommunication(new Message(tid, WRITE, toWrite, amount, myIp, myPort));
+        handleCommunication(
+                new Message(tid, WRITE, toWrite, amount, myIp, myPort));
     }
     
-    // Tell server this transaction is closing
+    // Tell worker this transaction is closing
     public void closeTransaction() throws AbortedException
     {
-        handleCommunication(new Message(tid, CLOSE, DEFAULT, DEFAULT, myIp, myPort));
+        handleCommunication(
+                new Message(tid, CLOSE, DEFAULT, DEFAULT, myIp, myPort));
     }
     
-    // Handle server communication in a generic way
+    // Handle worker communication in a generic way
     public Message handleCommunication(Message toSend) throws AbortedException
     {
         Message received;
@@ -112,16 +119,18 @@ public class TransactionServerProxy implements MessageTypes
         // Throw exception if we are aborting
         if (received.type == ABORTED)
         {
-            // Spaces for indentation
-            throw new AbortedException("        Transaction " + "#" + tid + " ABORTED due to deadlock");
+            // Spaces for visual indentation
+            throw new AbortedException("        Transaction " + "#" + tid 
+                                       + " ABORTED due to deadlock");
         }
         
         // Return received message if we are not aborting
         return received;
     }
     
-    // If we were aborted, we use this to reset our info so we submit a new 
-    // OPEN request to the server
+    // If we were aborted, we use this to reset our communication info so we
+    // submit a new OPEN request to the server instead of trying to send it to
+    // the old worker and making bad things happen
     public void resetRemoteInfo()
     {
         senderReceiver.ip = serverIp;

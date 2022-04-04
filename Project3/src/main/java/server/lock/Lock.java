@@ -19,8 +19,7 @@ public class Lock implements LockTypes
     // The account this lock is locking
     private final int account;
     
-    // Contains TIDs of lock holders. Maybe this should be the 
-    // TransactionWorkerManagers themselves?
+    // Contains references to all lock holders
     protected final ArrayList<TransactionManagerWorker> lockHolders;
         
     // Indicates lock type, NONE if no one is locking READ if one or more are
@@ -36,10 +35,13 @@ public class Lock implements LockTypes
         
     }
     
-    // Acquire a lock on an account
-    public synchronized void acquire(TransactionManagerWorker acquiring, int requestedLockType) throws AbortedException
+    // Acquire a lock on this account
+    public synchronized void acquire(TransactionManagerWorker acquiring,
+                                     int requestedLockType) 
+            throws AbortedException
     {
-        String logBuffer = "Set lock " + stringFromType(requestedLockType) + " on account #" + account;
+        String logBuffer = "Set lock " + stringFromType(requestedLockType) 
+                           + " on account #" + account;
         
         // Check if we can acquire the lock we want
         while (isConflict(acquiring, requestedLockType))
@@ -50,10 +52,12 @@ public class Lock implements LockTypes
             
             try
             {    
-                // Set that this transaction is now waiting on a lock for this
-                // lock's account
+                // Set that this transaction is now waiting on this lock
                 acquiring.waiting = this;
-                acquiring.appendLog("Wait to set " + stringFromType(requestedLockType) + " on account #" + account);
+                // Indicate that we are waiting
+                acquiring.appendLog("Wait to set " 
+                                    + stringFromType(requestedLockType) 
+                                    + " on account #" + account);
                 
                 wait();
             }
@@ -62,17 +66,21 @@ public class Lock implements LockTypes
                 
             }                
             
-            acquiring.appendLog("Woke up, again trying to set " + stringFromType(requestedLockType) + " on account #" + account);
+            // Indicate we woke back up
+            acquiring.appendLog("Woke up, again trying to set " 
+                                + stringFromType(requestedLockType) 
+                                + " on account #" + account);
         }
 
-        // If we are requesting a WRITE lock, we can only get here if we are the
-        // only lock holder. If we are requesting a READ lock, we can only get
-        // here if we are the only holder or the current lock is READ
+        // If the requesting transaction did not already hold any lock on this
+        // account, add it to the lock holders and add this to its held locks
         if (!lockHolders.contains(acquiring))
         {
             lockHolders.add(acquiring);
+            acquiring.heldLocks.add(this);
         }
-        
+                
+        // Indicate if we are sharing the lock with anyone
         if (lockHolders.size() > 1)
         {
             logBuffer += ", sharing lock with:";
@@ -95,36 +103,42 @@ public class Lock implements LockTypes
     // Release a lock on the account
     public synchronized void release(TransactionManagerWorker releasing)
     {
-        // Release this transaction and set the lock type to NONE if this was
-        // the only transaction
+        // Remove this transaction
         lockHolders.remove(releasing);
-        releasing.appendLog("Release " + stringFromType(lockType) + ", account #" + account);
+        releasing.appendLog("Release " + stringFromType(lockType) 
+                            + ", account #" + account);
         
         // If this was the only holder set the lock type to NONE. Note that we
         // will never need to demote from WRITE to READ because if the releasing
         // transaction held a WRITE lock it would necessarily be the only lock
-        // holder at time of release
+        // holder at time of release meaning we will now set to NONE
         if (lockHolders.isEmpty())
         {
             lockType = NONE;
         }
         
-        // Notify any waiting locks that they should check for conflicts again
+        // Notify any waiting locks that they should try to acquire again
         notifyAll();
     }
     
     // Cannot acquire a lock if another transaction holds a write lock or if
     // we are requesting a write lock and other transactions already hold
     // read locks
-    private boolean isConflict(TransactionManagerWorker acquiring, int requestedLockType)
+    private boolean isConflict(TransactionManagerWorker acquiring,
+                               int requestedLockType)
     {
-        String logBuffer = "Current lock " + stringFromType(lockType) + " on account #" + account;
+        String logBuffer = "Current lock " + stringFromType(lockType) + 
+                           " on account #" + account;
         
-        boolean onlyHolder = lockHolders.size() == 1 && lockHolders.contains(acquiring);
+        // These were split into two conditions like this to make the logging
+        // easier below
+        boolean onlyHolder = lockHolders.size() == 1 
+                             && lockHolders.contains(acquiring);
         boolean conflict = (lockType == WRITE) 
                             || (requestedLockType == WRITE && lockType != NONE 
                             && !onlyHolder);
         
+        // Determine how to report the current situation
         if (lockType == NONE)
         {
             logBuffer += ", no holder";
@@ -161,16 +175,22 @@ public class Lock implements LockTypes
     // If the acquring transaction was told to wait, but it there is a holder of
     // this lock that is waiting on a lock the acquring transaction holds, the
     // acquiring transaction should abort to prevent deadlock
-    private void deadlockForming(TransactionManagerWorker acquiring, int requestedLockType) throws AbortedException
+    private void deadlockForming(TransactionManagerWorker acquiring, 
+                                int requestedLockType) throws AbortedException
     {
         for (TransactionManagerWorker holder : lockHolders)
         {
-            if (acquiring.heldLocks.contains(holder.waiting) && acquiring != holder)
+            if (acquiring.heldLocks.contains(holder.waiting) 
+                && acquiring != holder)
             {
-                acquiring.appendLog("Aborting when trying to set a " + stringFromType(requestedLockType) 
-                                    + " on account #" + account + " while holding a " + stringFromType(holder.waiting.lockType) 
+                acquiring.appendLog("Aborting when trying to set a " 
+                                    + stringFromType(requestedLockType) 
+                                    + " on account #" + account + " while"
+                                    + " holding a " 
+                                    + stringFromType(holder.waiting.lockType) 
                                     + " on account #" + holder.waiting.account);
-                throw new AbortedException("Transaction " + acquiring.tid + " aborted");
+                throw new AbortedException("Transaction " + acquiring.tid 
+                                           + " aborted");
             }
         }    
     }

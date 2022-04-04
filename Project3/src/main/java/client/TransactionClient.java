@@ -8,7 +8,6 @@ import util.*;
 import message.*;
 
 import java.io.*;
-import java.net.*;
 import java.util.*;
 import java.util.logging.*;
 
@@ -19,7 +18,8 @@ import java.util.logging.*;
  */
 public class TransactionClient implements MessageTypes
 {
-    private final static String DEFAULT_PROPERTIES_PATH = "client_properties.txt";
+    private final static String DEFAULT_PROPERTIES_PATH = 
+            "client_properties.txt";
     
     private Scanner scanner = null;
     private Random random = new Random();
@@ -53,7 +53,9 @@ public class TransactionClient implements MessageTypes
                 break;
             // If they provided more than 1 command line arg we error
             default:
-                System.out.println("The only command line argument should (optionally) be a path to a properties file.");
+                System.out.println(
+                    "The only command line argument should (optionally) be a"
+                    + " path to a properties file.");
                 System.exit(1);
         }
         
@@ -72,7 +74,8 @@ public class TransactionClient implements MessageTypes
         }
         catch (FileNotFoundException e)
         {
-            Logger.getLogger(TransactionClient.class.getName()).log(Level.SEVERE, null, e);
+            Logger.getLogger(TransactionClient.class.getName())
+                    .log(Level.SEVERE, null, e);
             System.out.println("Failed to find properties file.");
             System.exit(1);
         }
@@ -92,8 +95,11 @@ public class TransactionClient implements MessageTypes
     // Create our transactions
     private void runClient()
     {
-        SenderReceiver senderReceiver = new SenderReceiver(null, serverIp, serverPort);
-        Message toSend = new Message(DEFAULT, SHUTDOWN, DEFAULT, DEFAULT, "DEFAULT", DEFAULT);
+        SenderReceiver senderReceiver = 
+                new SenderReceiver(null, serverIp, serverPort);
+        Message toSend = 
+                new Message(DEFAULT, SHUTDOWN, DEFAULT, DEFAULT, "DEFAULT",
+                            DEFAULT);
         
         // Create all our transaction
         for (int i = 0; i < numTransactions; i++)
@@ -101,7 +107,7 @@ public class TransactionClient implements MessageTypes
             createTransaction();
         }
 
-        // Wait for all of our threads to exit
+        // Wait for all of our threads to join
         for (TransactionClientWorker transaction : workers)
         {
             try
@@ -110,7 +116,8 @@ public class TransactionClient implements MessageTypes
             }
             catch (InterruptedException e)
             {
-                Logger.getLogger(TransactionClient.class.getName()).log(Level.SEVERE, null, e);
+                Logger.getLogger(TransactionClient.class.getName())
+                        .log(Level.SEVERE, null, e);
                 System.out.println("Transaction interrupted:\n" + e);
                 System.exit(1);   
             }
@@ -130,7 +137,22 @@ public class TransactionClient implements MessageTypes
         final int destination = random.nextInt(numAccounts);
         final int amount = random.nextInt(maxTransfer);
                
-        newTransaction = new TransactionClientWorker(source, destination, amount, serverIp, serverPort, myIp);
+        newTransaction =
+                new TransactionClientWorker(source, destination, amount,
+                                            serverIp, serverPort, myIp);
+        workers.add(newTransaction);
+        newTransaction.start();
+    }
+    
+    // I made this to create specific transactions for debugging specific 
+    // situations
+    public void createTransaction(int source, int destination, int amount)
+    {
+        final TransactionClientWorker newTransaction;
+               
+        newTransaction = 
+                new TransactionClientWorker(source, destination, amount,
+                                            serverIp, serverPort, myIp);
         workers.add(newTransaction);
         newTransaction.start();
     }
