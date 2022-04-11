@@ -71,7 +71,7 @@ public class TransactionServerProxy implements MessageTypes
         oldTid = tid;
         
         // Send an open request to the server and get back our tid and the ip
-        // and port of the client we're communicating with
+        // and port of the worker we're communicating with
         Message received = handleCommunication(
                 new Message(tid, OPEN, DEFAULT, DEFAULT, myIp, myPort));
 

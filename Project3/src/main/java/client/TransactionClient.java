@@ -128,7 +128,7 @@ public class TransactionClient implements MessageTypes
     }
     
     // Create a single transaction that has source 0 - (numAccounts - 1)
-    // destination 0 - (numAccounts - 1) and amount 1 - 10
+    // destination 0 - (numAccounts - 1) and amount 0 - (maxTransfer - 1)
     public void createTransaction()
     {
         final TransactionClientWorker newTransaction;
