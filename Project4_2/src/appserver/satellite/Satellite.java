@@ -257,6 +257,7 @@ public class Satellite extends Thread {
             Logger.getLogger(Satellite.class.getName())
                 .log(Level.SEVERE, null, e);
             System.out.println("Failed to create server socket.");
+            System.exit(1);
         }
         
         // start taking job requests in a server loop
@@ -434,6 +435,7 @@ public class Satellite extends Thread {
             }
         }
         
+        // Give back the tool we got if we succeeded
         return toolObject;
     }
 
