@@ -257,7 +257,6 @@ public class Satellite extends Thread {
             Logger.getLogger(Satellite.class.getName())
                 .log(Level.SEVERE, null, e);
             System.out.println("Failed to create server socket.");
-            System.exit(1);
         }
         
         // start taking job requests in a server loop
@@ -276,7 +275,6 @@ public class Satellite extends Thread {
                 Logger.getLogger(Satellite.class.getName())
                     .log(Level.SEVERE, null, e);
                 System.out.println("Failed to accept job.");
-                System.exit(1);
             }
             
             new SatelliteThread(socket, this).start();
@@ -313,6 +311,7 @@ public class Satellite extends Thread {
                 readFromNet = new ObjectInputStream(jobRequest.getInputStream());
                 writeToNet = new ObjectOutputStream(jobRequest.getOutputStream());
                 
+                // Get our incoming message
                 message = (Message) readFromNet.readObject();
             }
             catch (IOException e)
@@ -320,14 +319,12 @@ public class Satellite extends Thread {
                 Logger.getLogger(SatelliteThread.class.getName())
                     .log(Level.SEVERE, null, e);
                 System.out.println("Failed to read job.");
-                System.exit(1);
             }
             catch (ClassNotFoundException e)
             {
                 Logger.getLogger(SatelliteThread.class.getName())
                     .log(Level.SEVERE, null, e);
                 System.out.println("Couldn't find the Message class.");
-                System.exit(1);  
             }
                 
             // reading message
@@ -352,28 +349,24 @@ public class Satellite extends Thread {
                         Logger.getLogger(SatelliteThread.class.getName())
                             .log(Level.SEVERE, null, e);
                         System.out.println("Unknown tool requested.");
-                        System.exit(1);
                     }
                     catch (ClassNotFoundException e)
                     {
                         Logger.getLogger(SatelliteThread.class.getName())
                             .log(Level.SEVERE, null, e);
                         System.out.println("Class not found when getting tool or job.");
-                        System.exit(1);     
                     }
                     catch (InstantiationException e)
                     {
                         Logger.getLogger(SatelliteThread.class.getName())
                             .log(Level.SEVERE, null, e);
                         System.out.println("Failed to instantiate requested tool.");
-                        System.exit(1);
                     }
                     catch (IllegalAccessException e)
                     {
                         Logger.getLogger(SatelliteThread.class.getName())
                             .log(Level.SEVERE, null, e);
                         System.out.println("Illegal access when requesting tool.");
-                        System.exit(1);
                     }
                     
                     break;
@@ -394,7 +387,6 @@ public class Satellite extends Thread {
                     Logger.getLogger(SatelliteThread.class.getName())
                         .log(Level.SEVERE, null, e);
                     System.out.println("Failed to send result to client.");
-                    System.exit(1); 
                 }
             }
         }
@@ -433,14 +425,12 @@ public class Satellite extends Thread {
                 Logger.getLogger(SatelliteThread.class.getName())
                     .log(Level.SEVERE, null, e);
                 System.out.println("Failed to get constructor on tool.");
-                System.exit(1); 
             }
             catch (InvocationTargetException e)
             {
                 Logger.getLogger(SatelliteThread.class.getName())
                     .log(Level.SEVERE, null, e);
                 System.out.println("Failed to invoke constructor on tool.");
-                System.exit(1);
             }
         }
         
